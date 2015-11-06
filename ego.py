@@ -2,6 +2,7 @@ __author__ = 'p2admin'
 import numpy as np
 from scipy.stats import norm
 from scipy.spatial.distance import pdist, cdist, squareform
+from scipy.linalg import pinv2
 
 class Kriging():
 
@@ -12,7 +13,7 @@ class Kriging():
         self.Sigma = sig
         self.X = np.array([[]]) #observed inputs, column vars
         self.y = np.array([[]]) #observed scores (must be 2-D)
-        self.SI = np.linalg.inv(sig)
+        self.SI = pinv2(sig)
 
         #self.model = np.array([])
 
@@ -20,8 +21,11 @@ class Kriging():
         self.X = X
         self.y = y
         self.R = self.R_ij(self.X)
+        print self.R
+        self.RI = pinv2(self.R)
+        print self.RI
         self.b = self.get_b()
-        self.RI = np.linalg.inv(self.R)
+
 
     def R_ij(self, X):
         #kernel for non-identity cov. matrix (sigma)
@@ -37,9 +41,9 @@ class Kriging():
 
     def get_b(self):
         dim = np.size(self.y)
-        num = np.ones(dim).T.dot(np.linalg.inv(self.R).dot(self.y))
-        den = np.ones(dim).T.dot(self.R.dot(np.ones(dim)))
-        self.b
+        ones = np.ones(dim)
+        num = ones.T.dot(self.RI.dot(self.y))
+        den = ones.T.dot(self.R.dot(ones))
         return num/den
 
     def yhat(self, x):
