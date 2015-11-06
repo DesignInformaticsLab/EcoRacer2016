@@ -3,11 +3,11 @@ import numpy as np
 from scipy.stats import norm
 from scipy.spatial.distance import pdist, cdist, squareform
 
-class Kriging(self):
+class Kriging():
 
-"""
-This is the actual optimization class, that will interface with the higher level regression.
-"""
+    """
+    This is the actual optimization class, that will interface with the higher level regression.
+    """
     def __init__(self, sig):
         self.Sigma = sig
         self.X = np.array([[]]) #observed inputs, column vars
@@ -15,9 +15,6 @@ This is the actual optimization class, that will interface with the higher level
         self.SI = np.linalg.inv(sig)
 
         #self.model = np.array([])
-
-    def step(self, Xi, yi):
-    #add a point to the model
 
     def fit(self, X, y):
         self.X = X
