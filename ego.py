@@ -1,44 +1,73 @@
 __author__ = 'p2admin'
 import numpy as np
 from scipy.stats import norm
+from scipy.spatial.distance import pdist, cdist, squareform
 
-
-class EfficientGlobalOpt(self):
+class Kriging(self):
 
 """
 This is the actual optimization class, that will interface with the higher level regression.
 """
     def __init__(self, sig):
         self.Sigma = sig
-        self.X = np.array([])
+        self.X = np.array([[]]) #observed inputs, column vars
+        self.y = np.array([[]]) #observed scores (must be 2-D)
+        self.SI = np.linalg.inv(sig)
+
+        #self.model = np.array([])
 
     def step(self, Xi, yi):
     #add a point to the model
 
     def fit(self, X, y):
-    #step on all existing points. in self.X
-        for i, n in enumerate(X):
+        self.X = X
+        self.y = y
+        self.R = self.R_ij(self.X)
+        self.b = self.get_b()
+        self.RI = np.linalg.inv(self.R)
 
+    def R_ij(self, X):
+        #kernel for non-identity cov. matrix (sigma)
+        dists = squareform(pdist(X, 'mahalanobis', VI=self.SI))
+        self.R = np.exp(-1*dists)
+        return self.R
 
-    def kernel(v1, v2, sig):
-        # helper function for step. sig assumed to be vector of diagonals
-        Sigma = np.diag(sig) #must be invertible.
-        S_inv = np.linalg.inv(Sigma)
+    def r_i(self, x, X):
+        #kernel for non-identity cov. matrix (sigma)
+        #X, x must be 2-D!
+        dists = cdist(X, x, 'mahalanobis', VI = self.SI)
+        return np.exp(-1*dists)
 
-        arg = -1*(np.subtract(x1, x2).T).dot(S_inv.dot(np.subtract(x1, x2)))
-        return np.exp(arg)
+    def get_b(self):
+        dim = np.size(self.y)
+        num = np.ones(dim).T.dot(np.linalg.inv(self.R).dot(self.y))
+        den = np.ones(dim).T.dot(self.R.dot(np.ones(dim)))
+        self.b
+        return num/den
 
-    def z_score(self, fmin, y, s):
-        return (fmin - y)/s
+    def yhat(self, x):
+        # the kriging surface for given X,y
+        r = self.r_i(x, self.X)
+        return self.b + r.T.dot(self.RI.dot(np.subtract(self.y, self.b)))
 
-    def expected_improv(fmin, y, s):
-        z = z_score(fmin, y, s)
+    def get_s(self, x):
+        dim = np.size(self.y)
+        ones = np.ones(dim)
+
+        r = self.r_i(x)
+
+        mse = 1-r.T.dot(self.RI.dot(r))+(1.-ones.T.dot(self.RI.dot(r)))**2/(1. - ones.T.dot(self.RI.dot(ones)))
+        sig = np.sqrt((self.y-self.b).T.dot(self.RI.dot(self.y-self.b))/dim)
+
+        return np.sqrt(mse)*sig
+
+    def f(self, x):
+        #expected improvement function, given the model y_h
+        y_h = self.yhat(x)
+        ymax = np.max(self.y)
+        s = self.get_s(x)
+        z = np.divide(np.subtract(ymax, y_h), s)
         pdf = norm.pdf(z)
         cdf = norm.cdf(z)
-
-        return np.multiply(np.subtract(fmin, y), pdf) + np.multiply(s, cdf)
-
-    def mse(self, v1, v2, f):
-    
-
-
+        f_x = np.multiply(np.subtract(ymax, y_h), pdf) + np.multiply(s, cdf)
+        return f_x
