@@ -2,7 +2,7 @@ __author__ = 'p2admin'
 """
 This contains the class for fitting a sigma for a human player onto EGO.
 """
-from ego import EfficientGlobalOpt
+from ego import Kriging
 #TODO: include preprocessing code for the raw game data
 # from preprocess import Preprocess
 import numpy as np
@@ -11,14 +11,11 @@ import pickle
 
 class CovarianceEstimate:
     def __init__(self, X, y):
-        self.model = EfficientGlobalOpt()
-        self.model.X = X
-        self.model.y = y
-        self.model.n, self.model.p = X.shape
+        self.model = Kriging(X, y)
 
     def solve(self):
         x0 = np.ones(n)
-        func = self.model.f
+        func = self.model.obj
         lb = 0
         ub = np.inf
         bounds = [(lb, ub)]*self.model.p
