@@ -3,8 +3,9 @@ __author__ = 'Yi Ren'
 This contains the class for fitting a sigma for a human player onto EGO.
 """
 from ego import Kriging
-#TODO: include preprocessing code for the raw game data
-# from preprocess import Preprocess
+from preprocess import  Preprocess
+
+
 import numpy as np
 import scipy.optimize as opt
 import pickle
@@ -23,7 +24,9 @@ class CovarianceEstimate:
         return result.out
 
 # get data from the game
-X, y = Preprocess()
+pre = Preprocess(pca_model='eco_full_pca.pkl')
+
+X, y = pre.ready_player_one(2)
 
 # get sigma estimate that maximizes the sum of expected improvements
 sigma = CovarianceEstimate(X, y).solve()

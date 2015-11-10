@@ -2,7 +2,7 @@ __author__ = 'Thurston Sexton'
 import numpy as np
 from scipy.stats import norm
 from scipy.spatial.distance import pdist, cdist, squareform
-from scipy.linalg import pinv2
+from scipy.linalg import pinv2, inv
 
 class Kriging():
 
