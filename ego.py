@@ -1,4 +1,4 @@
-__author__ = 'p2admin'
+__author__ = 'Thurston Sexton'
 import numpy as np
 from scipy.stats import norm
 from scipy.spatial.distance import pdist, cdist, squareform
@@ -10,14 +10,15 @@ class Kriging():
     This is the actual optimization class, that will interface with the higher level regression.
     """
     #def __init__(self, sig, X, y):
-    def __init__(self, sig):
+    def __init__(self, sig_inv):
         #self.X = X
         #self.y = y
 
-        self.Sigma = sig
+        self.SI = np.diag(sig_inv)
+        #self.Sigma = sig
         self.X = np.array([[]]) # observed inputs, column vars
         self.y = np.array([[]]) # observed scores (must be 2-D)
-        self.SI = pinv2(sig)
+
 
         # self.model = np.array([])
 
@@ -86,18 +87,18 @@ class Kriging():
         f_x = np.multiply(np.subtract(ymax, y_h), pdf) + np.multiply(s, cdf)
         return f_x
 
-    def obj(self, sig):
+    def obj(self, sig_inv):
         # save whole database as a copy
         old_X = self.X[:]
         old_y = self.y[:]
 
-        self.Sigma = sig  # replace stored sigma with supplied
-        self.SI = pinv2(sig)
+        #self.Sigma = sig  # replace stored sigma with supplied
+        self.SI = np.diag(sig_inv)
         sum = 0.  # initiate loop
         self.fit(old_X[:1],old_y[:1])  # first observation
-        for i, x in enumerate(old_X, 2): #loop through the rest
+        for i, x in enumerate(old_X, 1): #loop through the rest
             f_current = self.f(x)  # expected improvement for current obs.
-            self.fit(old_X[:i-1], old_y[:i-1])  # fit up to current obs.
+            self.fit(old_X[:i], old_y[:i])  # fit up to current obs.
             sum += np.nan_to_num(f_current[0, 0])  # add f to rolling sum
 
         # return original database to storage
