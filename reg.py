@@ -12,19 +12,28 @@ import pickle
 
 class CovarianceEstimate:
     def __init__(self, X, y):
-        self.model = Kriging(X, y)
+        self.n = X.shape[1]
+        self.model = Kriging(np.ones(self.n))
+        self.model.fit(X,y)
+        self.input = X
+        self.rem_eng = y
 
     def solve(self):
-        x0 = np.ones(n)
-        func = self.model.obj
+        x0 = np.ones(self.n)
+
+        func = lambda x:  - self.model.obj(x)
         lb = 0
-        ub = np.inf
-        bounds = [(lb, ub)]*self.model.p
-        result = opt.fmin_slsqp(func=func, x0=x0, bounds=bounds)
-        return result.out
+        ub = 100
+        bounds = [(lb, ub)]*self.n
+        print bounds
+        #res = opt.minimize(func, x0=x0, bounds=bounds, method='SLSQP')
+        res = opt.differential_evolution(func, bounds, disp=True, popsize=50)
+        print res.x, res.fun
+        return res.x
 
 # get data from the game
-pre = Preprocess(pca_model='eco_full_pca.pkl')
+pre = Preprocess(pca_model='eco_full_pca.pkl', all_dat='all_games.pkl')
+# pre.get_json('alluser_control.json')  # uncomment this to get the pkl file needed!!
 
 X, y = pre.ready_player_one(2)
 
@@ -38,10 +47,3 @@ with open(file_address, 'w') as f:
         pickle.dump(sigma, f)
 f.close()
 
-
-
-
-
-
-
-def grad
