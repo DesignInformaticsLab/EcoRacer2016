@@ -6,10 +6,12 @@ This contains the class for fitting a sigma for a human player onto EGO.
 """
 from ego import Kriging
 from preprocess import Preprocess
-from bayes_opt import BayesianOptimization
+# from bayes_opt import BayesianOptimization
 import numpy as np
 import scipy.optimize as opt
 import cPickle as pickle
+import json
+import csv
 
 class CovarianceEstimate:
     '''
@@ -72,55 +74,120 @@ class CovarianceEstimate:
         :return: best sigma
         '''
 
-        # x0 = 1./np.ones(30)/9.2564178897127807
+        test_scale = np.arange(0,10,0.1)
+        # test_scale = np.array([0.7])
+        result_x = np.zeros((test_scale.shape[0], 30))
+        result_f = np.zeros(test_scale.shape)
 
-        # func = lambda x: - self.model.obj(x)  # use this if switching from EGO
+        for i, s in enumerate(test_scale):
 
-        # lb = 0.
-        # ub = 1000.
-        # bounds = [(lb, ub)]*self.n
-        # print bounds
+            # x0 = np.zeros(30)+1e-15
+            # x0[7] = np.exp(2.5)
 
-        # these are some alternative functions, which use 'callbackF for verbosity'
-        # print self.model.obj(x0)
-        # res = opt.minimize(func, x0=x0, bounds=bounds, method='SLSQP', callback=self.callbackF, tol=1e-8)
-        # res = opt.differential_evolution(func, bounds, disp=True, popsize=10)
-        # res = opt.basinhopping(func, x0=x0, disp=True)
+            # x0 = np.ones(30)
+            # -->
+            # x0 = [1.50205418e-01, 6.76120529e-12, 1.84195280e-11, 7.83697468e-12,
+            #       1.88757328e-12, 3.95820958e-11, 1.19620582e-11, 1.19440742e-11,
+            #       1.87089886e-11, 4.58049765e+00, 4.91223856e-12, 2.84647880e-12,
+            #       5.69667522e-12, 2.30425680e-11, 1.14781061e-11, 3.45560046e-11,
+            #       9.35167355e-12, 7.56675789e-12, 1.92011109e-03, 1.98174635e-11,
+            #       7.22949300e-12, 3.86415689e-12, 3.32313328e-11, 6.81567135e-12,
+            #       9.75048750e-12, 1.13677645e-11, 5.17722412e-12, 1.53569991e-03,
+            #       2.38163239e-11, 4.80720115e-12] # -6.28698665444
 
-        bounds = pickle.load(open("ego_bds.p", "rb"))  # load sigma boundaries
-        bo = BayesianOptimization(self.ego_func, pbounds=bounds)  # create optimizer object
-        explore = pickle.load(open("ego_explore.p", "rb"))  # load points to check
-        bo.explore(explore) #initiate
-        bo.maximize(init_points=15, n_iter=25)
-        print bo.res['max']
-        # print res.x, res.fun
-        return bo.res['max']
+            # x0 = np.ones(30)*0.1
+            # -->
+            # [  2.00829797e-03   1.90314686e-04   4.95525647e-08   5.72888703e-08
+            #    5.05644909e-08   4.96489353e-08   4.86581148e-08   5.14023421e-08
+            #    5.30146723e-02   4.28454169e-08   2.13781365e-09   3.81019074e-08
+            #    1.58936468e-08   1.02135824e-08   4.68306047e-08   4.19927866e-08
+            #    5.23404844e-08   4.40914737e-08   4.98378832e-08   7.80431707e-09
+            #    4.60839075e-08   5.09895031e-08   4.21929293e-08   2.49207806e-02
+            #    1.62240194e-08   4.79799229e-08   2.22741405e-08   4.69940438e-01
+            #    2.09332766e-09   5.85302709e-08] -6.34599415271
 
+
+            # [ 0.          0.          0.          0.          0.          0.          0.
+            #   0.          0.          0.          0.          0.          0.          0.
+            #   0.          0.          0.          0.          0.          0.          0.
+            #   0.          0.          0.          0.          0.          0.
+            #   0.86766298  0.          0.        ] -6.752578221
+            x0 = np.ones(30)*s
+            # x0 = np.random.random(30)*5.
+
+            func = lambda x: - self.model.obj(x)  # use this if switching from EGO
+
+            lb = 0.
+            ub = 10.
+            bounds = [(lb, ub)]*self.n
+            # print bounds
+
+            # these are some alternative functions, which use 'callbackF for verbosity'
+            # print self.model.obj(x0)
+            res = opt.minimize(func, x0=x0, bounds=bounds, method='SLSQP', callback=self.callbackF, tol=1e-8,
+                               options={'eps': 1e-3, 'iprint': 2, 'disp': True})
+            # res = opt.differential_evolution(func, bounds, disp=True, popsize=10)
+            # res = opt.basinhopping(func, x0=x0, disp=True)
+
+            # bounds = pickle.load(open("ego_bds.p", "rb"))  # load sigma boundaries
+            # bo = BayesianOptimization(self.ego_func, pbounds=bounds)  # create optimizer object
+            # explore = pickle.load(open("ego_explore.p", "r"))  # load points to check
+            # bo.explore(explore) #initiate
+            # bo.maximize(init_points=15, n_iter=25)
+            # print bo.res['max']
+            print res.x, res.fun
+            # return bo.res['max']
+            result_f[i] = res.fun
+            result_x[i] = res.x
+        return result_f, result_x
+
+# #
+# # get data from the game
+# # delete the parameters if performing first-time or new player.
+# # Parameters are there to speed up after saving a pkl.
+# pre = Preprocess(pca_model='eco_full_pca.pkl', all_dat='all_games.pkl')
+# # pre = Preprocess()
+# # pre.get_json('alluser_control.json')  # uncomment this to create the pkl file needed!!
+# # pre.train_pca()
+# X, y = pre.ready_player_one(2)
 #
-# get data from the game
-# delete the parameters if performing first-time or new player.
-# Parameters are there to speed up after saving a pkl.
-pre = Preprocess(pca_model='eco_full_pca.pkl', all_dat='all_games.pkl')
-# pre.get_json('alluser_control.json')  # uncomment this to create the pkl file needed!!
+# from sklearn.preprocessing import StandardScaler
+#
+# scale = StandardScaler()
+# X = scale.fit_transform(X)
+#
+# # get sigma estimate that maximizes the sum of expected improvements
+# soln = CovarianceEstimate(X, y)
+# [obj_set, sigma_set] = soln.solve()
+#
+# # pick the best solution
+# obj = obj_set.min(axis=0)
+# sigma = sigma_set[obj_set.argmin(axis=0), :]
+#
+# # load bounds
+# from numpy import loadtxt
+# bounds = loadtxt("ego_bounds.txt", comments="#", delimiter=",", unpack=False)
+#
+# # store sigma for simulation
+# # TODO: need to specify file name based on settings, e.g., optimization algorithm and input data source (best player?)
+# file_address = 'sigma.json'
+# with open(file_address, 'w') as f:
+#         # pickle.dump([obj_set, sigma_set], f)
+#     json.dump([bounds.tolist(), obj, sigma.tolist()], f)
+# f.close()
 
-X, y = pre.ready_player_one(2)
+# store all pcs to a json
+from sklearn.externals import joblib
+temp = joblib.load('eco_full_pca.pkl')
 
-from sklearn.preprocessing import StandardScaler
-
-scale = StandardScaler()
-X = scale.fit_transform(X)
-
-# get sigma estimate that maximizes the sum of expected improvements
-sigma = CovarianceEstimate(X, y).solve()
-
-# store sigma for simulation
-# TODO: need to specify file name based on settings, e.g., optimization algorithm and input data source (best player?)
-file_address = 'sigma.pickle'
+file_address = 'pca.json'
 with open(file_address, 'w') as f:
-        pickle.dump(sigma, f)
+    json.dump(temp.components_.tolist(), f)
 f.close()
 
-A = pre.pca.components_
-Std_inv = np.diag(1/scale.std_)
-vis = A.T.dot(Std_inv.dot(np.diag(sigma).dot(Std_inv.dot(A))))
-np.savetxt('visualize_this.txt', vis)
+
+
+# A = pre.pca.components_
+# Std_inv = np.diag(1/scale.std_)
+# vis = A.T.dot(Std_inv.dot(np.diag(sigma).dot(Std_inv.dot(A))))
+# np.savetxt('visualize_this.txt', vis)

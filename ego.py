@@ -104,7 +104,7 @@ class Kriging():
         # return original database to storage
         self.X = old_X
         self.y = old_y
-        return sum
+        return np.log(sum) # edited by Max to scale down the objective function
 
         # for i in range(1,len(data)):
         #     data_now = data[0:i]
