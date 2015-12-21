@@ -6,7 +6,7 @@ This contains the class for fitting a sigma for a human player onto EGO.
 """
 from ego import Kriging
 from preprocess import Preprocess
-# from bayes_opt import BayesianOptimization
+from bayes_opt import BayesianOptimization
 import numpy as np
 import scipy.optimize as opt
 import cPickle as pickle
@@ -74,7 +74,7 @@ class CovarianceEstimate:
         :return: best sigma
         '''
 
-        test_scale = np.arange(0,10,0.1)
+        test_scale = np.arange(0,2,0.5)
         # test_scale = np.array([0.7])
         result_x = np.zeros((test_scale.shape[0], 30))
         result_f = np.zeros(test_scale.shape)
@@ -124,8 +124,8 @@ class CovarianceEstimate:
 
             # these are some alternative functions, which use 'callbackF for verbosity'
             # print self.model.obj(x0)
-            res = opt.minimize(func, x0=x0, bounds=bounds, method='SLSQP', callback=self.callbackF, tol=1e-8,
-                               options={'eps': 1e-3, 'iprint': 2, 'disp': True})
+            res = opt.minimize(func, x0=x0, bounds=bounds, method='SLSQP', tol=1e-8,
+                               options={'eps': 1e-2, 'iprint': 2, 'disp': True, 'maxiter': 200})
             # res = opt.differential_evolution(func, bounds, disp=True, popsize=10)
             # res = opt.basinhopping(func, x0=x0, disp=True)
 
@@ -145,44 +145,47 @@ class CovarianceEstimate:
 # # get data from the game
 # # delete the parameters if performing first-time or new player.
 # # Parameters are there to speed up after saving a pkl.
-# pre = Preprocess(pca_model='eco_full_pca.pkl', all_dat='all_games.pkl')
-# # pre = Preprocess()
-# # pre.get_json('alluser_control.json')  # uncomment this to create the pkl file needed!!
-# # pre.train_pca()
-# X, y = pre.ready_player_one(2)
-#
-# from sklearn.preprocessing import StandardScaler
-#
+pre = Preprocess(pca_model='eco_full_pca.pkl', all_dat='all_games.pkl')
+# pre = Preprocess()
+# pre.get_json('alluser_control.json')  # uncomment this to create the pkl file needed!!
+# pre.train_pca()
+X, y = pre.ready_player_one(2)
+
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
+
 # scale = StandardScaler()
-# X = scale.fit_transform(X)
+scale = MinMaxScaler((-1., 1.))
+X = scale.fit_transform(X)
 #
 # # get sigma estimate that maximizes the sum of expected improvements
-# soln = CovarianceEstimate(X, y)
-# [obj_set, sigma_set] = soln.solve()
-#
+soln = CovarianceEstimate(X, y)
+[obj_set, sigma_set] = soln.solve()
+
 # # pick the best solution
-# obj = obj_set.min(axis=0)
-# sigma = sigma_set[obj_set.argmin(axis=0), :]
-#
+obj = obj_set.min(axis=0)
+sigma = sigma_set[obj_set.argmin(axis=0), :]
+print obj, sigma
+
 # # load bounds
 # from numpy import loadtxt
 # bounds = loadtxt("ego_bounds.txt", comments="#", delimiter=",", unpack=False)
 #
 # # store sigma for simulation
 # # TODO: need to specify file name based on settings, e.g., optimization algorithm and input data source (best player?)
-# file_address = 'sigma.json'
-# with open(file_address, 'w') as f:
-#         # pickle.dump([obj_set, sigma_set], f)
-#     json.dump([bounds.tolist(), obj, sigma.tolist()], f)
-# f.close()
+
+file_address = 'p2_slsqp_sigma.json'
+with open(file_address, 'w') as f:
+    # pickle.dump([obj_set, sigma_set], f)
+    json.dump([obj, sigma.tolist()], f, sort_keys=True, indent=4, ensure_ascii=False)
+f.close()
 
 # store all pcs to a json
 from sklearn.externals import joblib
 temp = joblib.load('eco_full_pca.pkl')
 
-file_address = 'pca.json'
+file_address = 'ica.json'
 with open(file_address, 'w') as f:
-    json.dump(temp.components_.tolist(), f)
+    json.dump(temp.components_.tolist(), f, sort_keys=True, indent=4, ensure_ascii=False)
 f.close()
 
 

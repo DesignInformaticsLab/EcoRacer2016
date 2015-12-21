@@ -1,7 +1,7 @@
 __author__ = 'Thurston Sexton'
 
 from sklearn.externals import joblib
-from sklearn.decomposition import TruncatedSVD
+from sklearn.decomposition import TruncatedSVD, FastICA
 import numpy as np
 import json
 import pandas as pd
@@ -61,7 +61,8 @@ class Preprocess:
         joblib.dump(self.all_dat, 'all_games.pkl')
 
     def train_pca(self, ndim=30):  # uses complete data-set
-        self.pca = TruncatedSVD(n_components=ndim)
+        # self.pca = TruncatedSVD(n_components=ndim)
+        self.pca = FastICA(n_components=ndim)
         self.pca.fit(self.all_dat)
         joblib.dump(self.pca, 'eco_full_pca.pkl')  # save for later importing
 
