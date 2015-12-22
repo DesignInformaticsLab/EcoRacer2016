@@ -6,7 +6,7 @@ This contains the class for fitting a sigma for a human player onto EGO.
 """
 from ego import Kriging
 from preprocess import Preprocess
-from bayes_opt import BayesianOptimization
+# from bayes_opt import BayesianOptimization
 import numpy as np
 import scipy.optimize as opt
 import cPickle as pickle
@@ -74,7 +74,7 @@ class CovarianceEstimate:
         :return: best sigma
         '''
 
-        test_scale = np.arange(0,2,0.5)
+        test_scale = np.arange(0,2,0.1)
         # test_scale = np.array([0.7])
         result_x = np.zeros((test_scale.shape[0], 30))
         result_f = np.zeros(test_scale.shape)
