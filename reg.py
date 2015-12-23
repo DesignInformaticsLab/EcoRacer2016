@@ -74,7 +74,7 @@ class CovarianceEstimate:
         :return: best sigma
         '''
 
-        test_scale = np.arange(0,2,0.1)
+        test_scale = np.arange(0,10,0.1)
         # test_scale = np.array([0.7])
         result_x = np.zeros((test_scale.shape[0], 30))
         result_f = np.zeros(test_scale.shape)
