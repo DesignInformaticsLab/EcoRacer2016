@@ -76,7 +76,7 @@ class CovarianceEstimate:
 
         test_scale = np.arange(0,2,0.1)
         # test_scale = np.array([0.7])
-        result_x = np.zeros((test_scale.shape[0], 30))
+        result_x = np.zeros((test_scale.shape[0], self.n))
         result_f = np.zeros(test_scale.shape)
 
         for i, s in enumerate(test_scale):
@@ -112,7 +112,7 @@ class CovarianceEstimate:
             #   0.          0.          0.          0.          0.          0.          0.
             #   0.          0.          0.          0.          0.          0.
             #   0.86766298  0.          0.        ] -6.752578221
-            x0 = np.ones(30)*s
+            x0 = np.ones(self.n)*s
             # x0 = np.random.random(30)*5.
 
             func = lambda x: - self.model.obj(x)  # use this if switching from EGO
@@ -124,6 +124,7 @@ class CovarianceEstimate:
 
             # these are some alternative functions, which use 'callbackF for verbosity'
             # print self.model.obj(x0)
+            print 'Initializing at '+str(s)
             res = opt.minimize(func, x0=x0, bounds=bounds, method='SLSQP', tol=1e-8,
                                options={'eps': 1e-2, 'iprint': 2, 'disp': True, 'maxiter': 200})
             # res = opt.differential_evolution(func, bounds, disp=True, popsize=10)
@@ -189,7 +190,12 @@ with open(file_address, 'w') as f:
 f.close()
 
 
-
+with open('p2_range_transform.json', 'w') as outfile:
+    json.dump({'range':scale.scale_.tolist(), 'min':scale.min_.tolist()},
+              outfile, sort_keys = True, indent = 4, ensure_ascii=False)
+with open('p2_ICA_transform.json', 'w') as outfile:
+    json.dump({'mix':pre.pca.mixing_.tolist(), 'unmix':pre.pca.components_.tolist(), 'mean':pre.pca.mean_.tolist()},
+              outfile, sort_keys = True, indent = 4, ensure_ascii=False)
 # A = pre.pca.components_
 # Std_inv = np.diag(1/scale.std_)
 # vis = A.T.dot(Std_inv.dot(np.diag(sigma).dot(Std_inv.dot(A))))

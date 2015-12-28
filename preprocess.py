@@ -75,5 +75,5 @@ class Preprocess:
         y = self.full_tab["rem_nrg"].values[masks[place-1]]
 
         X_pca = self.pca.transform(X)
-
+        X_pca = np.vstack((X_pca.T, self.full_tab["finaldrive"].values[masks[place-1]])).T
         return (X_pca, y)
