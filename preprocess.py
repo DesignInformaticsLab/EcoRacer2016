@@ -5,7 +5,7 @@ from sklearn.decomposition import TruncatedSVD, FastICA
 import numpy as np
 import json
 import pandas as pd
-
+import os
 
 
 class Preprocess:
@@ -17,7 +17,8 @@ class Preprocess:
         if all_dat is not None:
             self.all_dat = joblib.load(all_dat)  # try 'all_games.pkl'
         self.proj = None
-        self.full_tab = pd.read_json("data.json")
+        print os.system('pwd')
+        self.full_tab = pd.read_json("../data.json")
         self.full_tab["rem_nrg"] = self.full_tab.apply(lambda x: self.remaining_energy(x.score), axis=1)
 
     @staticmethod
@@ -58,13 +59,13 @@ class Preprocess:
         self.all_dat=np.empty((2391,18160))
         for i,x in enumerate(self.dat.x):
             self.all_dat[i,:]=self.full_vec(x, self.dat.sig[i], 18160)
-        joblib.dump(self.all_dat, 'all_games.pkl')
+        joblib.dump(self.all_dat, '../all_games.pkl')
 
     def train_pca(self, ndim=30):  # uses complete data-set
         # self.pca = TruncatedSVD(n_components=ndim)
         self.pca = FastICA(n_components=ndim)
         self.pca.fit(self.all_dat)
-        joblib.dump(self.pca, 'eco_full_pca.pkl')  # save for later importing
+        joblib.dump(self.pca, '../eco_full_pca.pkl')  # save for later importing
 
     def ready_player_one(self, place):
         # place must be less than 7.

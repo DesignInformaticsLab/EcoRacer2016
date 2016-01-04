@@ -30,6 +30,7 @@ class Kriging():
         self.R = self.R_ij(self.X)
         #print self.R
         self.RI = pinv2(self.R)
+        # self.RI = inv(self.R)
         #print self.RI
         self.b = self.get_b()
 
@@ -87,28 +88,61 @@ class Kriging():
         f_x = np.multiply(np.subtract(ymax, y_h), pdf) + np.multiply(s, cdf)
         return f_x
 
-    def obj(self, sig_inv):
+    def f_path(self, sig_inv):
         # save whole database as a copy
         old_X = self.X[:]
         old_y = self.y[:]
+        old_sig = self.SI[:]
 
         #self.Sigma = sig  # replace stored sigma with supplied
         self.SI = np.diag(sig_inv)
-        sum = 0.  # initiate loop
-        self.fit(old_X[:1],old_y[:1])  # first observation
-        for i, x in enumerate(old_X, 1): #loop through the rest
-            f_current = self.f(x)  # expected improvement for current obs.
-            self.fit(old_X[:i], old_y[:i])  # fit up to current obs.
-            sum += np.nan_to_num(f_current[0, 0])  # add f to rolling sum
+        path = np.zeros(self.n)
+        # print self.n, path.shape
+        self.fit(old_X[:2],old_y[:2])  # first observation
+        for i, x in enumerate(old_X[2:], 2):
+            if (i==3):
+                a = 1
+
+            path[i-1] = self.f(x)
+            self.fit(old_X[:i+1], old_y[:i+1])
 
         # return original database to storage
         self.X = old_X
         self.y = old_y
-        return np.log(sum) # edited by Max to scale down the objective function
+        self.SI = old_sig
+        return np.nan_to_num(path)
+        # return path
 
-        # for i in range(1,len(data)):
-        #     data_now = data[0:i]
-        #     self.fit(data_now[0],data_now[1])
-        #     F += self.f(x)
-        # return F
+    def obj(self, sig_inv):
+
+        path = self.f_path(sig_inv)
+        sum_improv = np.sum(path)
+
+        return np.log(sum_improv)
+
+        # # save whole database as a copy
+        # old_X = self.X[:]
+        # old_y = self.y[:]
+        # old_sig = self.SI[:]
+        #
+        # #self.Sigma = sig  # replace stored sigma with supplied
+        # self.SI = np.diag(sig_inv)
+        # sum = 0.  # initiate loop
+        # self.fit(old_X[:1],old_y[:1])  # first observation
+        # for i, x in enumerate(old_X, 1): #loop through the rest
+        #     f_current = self.f(x)  # expected improvement for current obs.
+        #     self.fit(old_X[:i], old_y[:i])  # fit up to current obs.
+        #     sum += np.nan_to_num(f_current[0, 0])  # add f to rolling sum
+        #
+        # # return original database to storage
+        # self.X = old_X
+        # self.y = old_y
+        # self.SI = old_sig
+        # return np.log(sum) # edited by Max to scale down the objective function
+        #
+        # # for i in range(1,len(data)):
+        # #     data_now = data[0:i]
+        # #     self.fit(data_now[0],data_now[1])
+        # #     F += self.f(x)
+        # # return F
 
