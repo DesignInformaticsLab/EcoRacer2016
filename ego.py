@@ -18,7 +18,7 @@ class Kriging():
         #self.Sigma = sig
         self.X = np.array([[]]) # observed inputs, column vars
         self.y = np.array([[]]) # observed scores (must be 2-D)
-
+        self.recent_path = np.array([])
 
         # self.model = np.array([])
 
@@ -66,7 +66,8 @@ class Kriging():
         ones = np.ones(dim)
 
         r = self.r_i(x, self.X)
-
+        if np.linalg.matrix_rank(self.R) < self.R.shape[1]:
+            return 0
         # WARNING: this is getting runtime warnings (invalid value encountered in divide)
         mse = 1-r.T.dot(self.RI.dot(r))+(1.-ones.T.dot(self.RI.dot(r)))**2/(1. - ones.T.dot(self.RI.dot(ones)))
 
@@ -100,8 +101,6 @@ class Kriging():
         # print self.n, path.shape
         self.fit(old_X[:2],old_y[:2])  # first observation
         for i, x in enumerate(old_X[2:], 2):
-            if (i==3):
-                a = 1
 
             path[i-1] = self.f(x)
             self.fit(old_X[:i+1], old_y[:i+1])
@@ -110,15 +109,17 @@ class Kriging():
         self.X = old_X
         self.y = old_y
         self.SI = old_sig
+
+        self.recent_path = path[:]
         return np.nan_to_num(path)
         # return path
 
     def obj(self, sig_inv):
 
         path = self.f_path(sig_inv)
-        sum_improv = np.sum(path)
+        sum_improv = np.sum(np.log(path+1))
 
-        return np.log(sum_improv)
+        return sum_improv
 
         # # save whole database as a copy
         # old_X = self.X[:]

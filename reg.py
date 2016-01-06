@@ -5,13 +5,11 @@ This contains the class for fitting a sigma for a human player onto EGO.
 
 """
 from ego import Kriging
-from preprocess import Preprocess
 # from bayes_opt import BayesianOptimization
 import numpy as np
 import scipy.optimize as opt
-import cPickle as pickle
-import json
-import csv
+import matplotlib.pyplot as plt
+
 
 class CovarianceEstimate:
     '''
@@ -35,16 +33,30 @@ class CovarianceEstimate:
         self.model.fit(X, y)
         self.input = X
         self.rem_eng = y
-        self.Nfeval = 0
+        self.sct = None
+        # self.fig = None
+        # self.ax = None
+        # self.Nfeval = 0
 
     def callbackF(self, Xi):
-        feval = self.model.obj(Xi)
-        print '{0:4d} {1: 3.6f}'.format(self.Nfeval, feval)
-        if np.any(Xi > 1000.) or np.any(Xi < 0.):
-            print 'OoB'
-        if feval > 1000.:
-            print Xi
-        self.Nfeval += 1
+        # feval = self.model.obj(Xi)
+        # print '{0:4d} {1: 3.6f}'.format(self.Nfeval, feval)
+        # if np.any(Xi > 1000.) or np.any(Xi < 0.):
+        #     print 'OoB'
+        # if feval > 1000.:
+        #     print Xi
+        # self.Nfeval += 1
+        # self.sct = plt.gca.plot(self.model.recent_path, 'b')
+
+        if len(plt.gca().lines) > 0:
+            del plt.gca().lines[0]
+        self.sct = plt.gca().plot(self.model.recent_path, 'b')
+        plt.gca().set_xlabel('play number')
+        plt.gca().set_ylabel('Expected Improvement Path')
+        plt.pause(0.0001)
+        # self.ax.set_title('Point Jacobi approximation after '+str(k)+' iterations')
+        # plt.pause(.002)
+        # print 'Hi!'
 
     def ego_func(self, x0, x1, x2, x3, x4, x5, x6,
                      x7, x8, x9, x10, x11, x12, x13, x14, x15,
@@ -65,7 +77,7 @@ class CovarianceEstimate:
             x[n] = i
         return self.model.obj(x)
 
-    def solve(self):
+    def solve(self, plot=False):
         '''
         MUST HAVE ego_bds.p and ego_explore.p in directory. This is a list of desired search ranch,
         and the positions to evaluate the model to instantiate EGO. Do not confuse with ego_bounds.txt,
@@ -74,13 +86,22 @@ class CovarianceEstimate:
         :return: best sigma
         '''
 
-        test_scale = np.arange(0,2,0.5)
+        test_scale = np.arange(.1,1,0.3)
         # test_scale = np.array([0.7])
         result_x = np.zeros((test_scale.shape[0], self.n))
         result_f = np.zeros(test_scale.shape)
 
-        for i, s in enumerate(test_scale):
 
+
+        for i, s in enumerate(test_scale):
+            if plot:
+                self.sct = None
+                ax = None
+
+                fig = plt.figure()
+                ax = fig.add_subplot(111)
+                plt.ion()
+                plt.show()
             # x0 = np.zeros(30)+1e-15
             # x0[7] = np.exp(2.5)
 
@@ -126,7 +147,8 @@ class CovarianceEstimate:
             # print self.model.obj(x0)
             print 'Initializing at '+str(s)
             res = opt.minimize(func, x0=x0, bounds=bounds, method='SLSQP', tol=1e-5,
-                               options={'eps': 1e-2, 'iprint': 2, 'disp': True, 'maxiter': 100})
+                               options={'eps': 1e-2, 'iprint': 2, 'disp': True, 'maxiter': 100},
+                               callback=self.callbackF)
             # res = opt.differential_evolution(func, bounds, disp=True, popsize=10)
             # res = opt.basinhopping(func, x0=x0, disp=True)
 
