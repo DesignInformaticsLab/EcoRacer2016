@@ -62,14 +62,14 @@ f.close()
 # f.close()
 
 
-with open('p2_range_transform.json', 'w') as outfile:
+with open('p3_range_transform.json', 'w') as outfile:
     json.dump({'range':scale.scale_.tolist(), 'min':scale.min_.tolist()},
               outfile, sort_keys = True, indent = 4, ensure_ascii=False)
-with open('p2_ICA_transform.json', 'w') as outfile:
+with open('p3_ICA_transform.json', 'w') as outfile:
     json.dump({'mix':pre.pca.mixing_.tolist(), 'unmix':pre.pca.components_.tolist(), 'mean':pre.pca.mean_.tolist()},
               outfile, sort_keys = True, indent = 4, ensure_ascii=False)
 
-np.savetxt('mix_scaled_p3_0.txt', X[0])
+np.savetxt('mix_scaled_p3_init.txt', X[:2])
 # A = pre.pca.components_
 # Std_inv = np.diag(1/scale.std_)
 # vis = A.T.dot(Std_inv.dot(np.diag(sigma).dot(Std_inv.dot(A))))

@@ -17,8 +17,11 @@ class Preprocess:
         if all_dat is not None:
             self.all_dat = joblib.load(all_dat)  # try 'all_games.pkl'
         self.proj = None
-        print os.system('pwd')
-        self.full_tab = pd.read_json("../data.json")
+        # print os.system('pwd')
+        drop = np.any(self.all_dat, axis=1)
+        self.all_dat = self.all_dat[drop]
+        self.full_tab = pd.read_json("../data.json")[drop]
+
         self.full_tab["rem_nrg"] = self.full_tab.apply(lambda x: self.remaining_energy(x.score), axis=1)
 
     @staticmethod
