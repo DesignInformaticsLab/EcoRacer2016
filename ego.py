@@ -117,8 +117,8 @@ class Kriging():
     def obj(self, sig_inv):
 
         path = self.f_path(sig_inv)
-        sum_improv = np.sum(np.log(path+1))
-
+        # sum_improv = np.sum(np.log(path+1))
+        sum_improv = np.sum(path)
         return sum_improv
 
         # # save whole database as a copy

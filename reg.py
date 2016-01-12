@@ -138,8 +138,8 @@ class CovarianceEstimate:
 
             func = lambda x: - self.model.obj(x)  # use this if switching from EGO
 
-            lb = 0.
-            ub = 10.
+            lb = 0.01
+            ub = 100.
             bounds = [(lb, ub)]*self.n
             # print bounds
 
