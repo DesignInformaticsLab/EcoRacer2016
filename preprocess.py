@@ -81,3 +81,16 @@ class Preprocess:
         X_pca = self.pca.transform(X)
         X_pca = np.vstack((X_pca.T, self.full_tab["finaldrive"].values[masks[place-1]])).T
         return (X_pca, y)
+
+    def prep_by_id(self, play_no):
+        id_no = self.full_tab['userid'][self.full_tab['id'] == play_no].values[0]
+        # print id_no
+        mask_a = self.full_tab.userid.values == id_no
+        mask_b = self.full_tab.id.values <= play_no
+        mask = np.logical_and(mask_a, mask_b)
+        X = self.all_dat[mask]
+        y = self.full_tab["rem_nrg"].values[mask]
+
+        X_pca = self.pca.transform(X)
+        X_pca = np.vstack((X_pca.T, self.full_tab["finaldrive"].values[mask])).T
+        return (X_pca, y)

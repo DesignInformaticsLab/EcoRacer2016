@@ -80,6 +80,7 @@ class Kriging():
         if x.size == self.X.shape[1]:
             x = np.array(x, ndmin=2) #ensure is 2D
         # expected improvement function, given the model y_h
+
         y_h = self.yhat(x)
         ymax = np.max(self.y)
         s = self.get_s(x)
@@ -113,6 +114,23 @@ class Kriging():
         self.recent_path = path[:]
         return np.nan_to_num(path)
         # return path
+
+    def f_by_sig(self, sig_inv):
+        """find the expected improvement of the last move, based on some sigma. """
+        # save whole database as a copy
+        old_X = self.X[:]
+        old_y = self.y[:]
+        old_sig = self.SI[:]
+
+        # self.Sigma = sig  # replace stored sigma with supplied
+        self.SI = np.diag(sig_inv)
+
+        self.fit(old_X[:-1], old_y[:-1])  # first observation
+        f = self.f(old_X[-1])
+        self.X = old_X
+        self.y = old_y
+        self.SI = old_sig
+        return np.nan_to_num(f)
 
     def obj(self, sig_inv):
 
