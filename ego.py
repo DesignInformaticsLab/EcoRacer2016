@@ -53,7 +53,7 @@ class Kriging():
         dim = np.size(self.y)
         ones = np.ones(dim)
         num = ones.T.dot(self.RI.dot(self.y))
-        den = ones.T.dot(self.R.dot(ones))
+        den = ones.T.dot(self.RI.dot(ones))
         return num/den
 
     def yhat(self, x):
@@ -84,10 +84,10 @@ class Kriging():
         y_h = self.yhat(x)
         ymax = np.max(self.y)
         s = self.get_s(x)
-        z = np.divide(np.subtract(ymax, y_h), s)
+        z = np.divide(np.subtract(y_h, ymax), s)
         pdf = norm.pdf(z)
         cdf = norm.cdf(z)
-        f_x = np.multiply(np.subtract(ymax, y_h), pdf) + np.multiply(s, cdf)
+        f_x = np.multiply(np.subtract(y_h, ymax), cdf) + np.multiply(s, pdf)
         return f_x
 
     def f_path(self, sig_inv):
@@ -135,8 +135,8 @@ class Kriging():
     def obj(self, sig_inv):
 
         path = self.f_path(sig_inv)
-        # sum_improv = np.sum(np.log(path+1))
-        sum_improv = np.sum(path)
+        sum_improv = np.sum(np.log(path+1))
+        # sum_improv = np.sum(path)
         return sum_improv
 
         # # save whole database as a copy
