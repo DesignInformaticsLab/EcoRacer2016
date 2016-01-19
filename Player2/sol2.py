@@ -16,9 +16,9 @@ import numpy as np
 # # delete the parameters if performing first-time or new player.
 # # Parameters are there to speed up after saving a pkl.
 pre = Preprocess(pca_model='../eco_full_pca.pkl', all_dat='../all_games.pkl')
-# pre = Preprocess()
+# pre = Preprocess(all_dat='../all_games.pkl')
 # pre.get_json('../alluser_control.json')  # uncomment this to create the pkl file needed!!
-# pre.train_pca()
+# pre.train_pca(ndim=20)
 X, y = pre.ready_player_one(2)
 
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
