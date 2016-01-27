@@ -57,26 +57,33 @@ else:
 # plt.show()
 
 
-y_min_mean = np.zeros((sig_scale.shape[0],max_iter))
-y_min_std = np.zeros((sig_scale.shape[0],max_iter))
-y_min_temp = np.zeros((repeat, max_iter))
-for j, sigma_inv in enumerate(sig_scale):
-    for i in np.arange(repeat):
-        y = solution[i,j,1]
-        for k in np.arange(y.shape[0]):
-            y_min_temp[i, k] = np.min(y[:k+1])
-        y_min_temp[i, y.shape[0]:] = y_min_temp[i, y.shape[0]-1]
-    y_min_mean[j,:] = np.mean(y_min_temp, axis=0)
-    y_min_std[j,:] = np.std(y_min_temp, axis=0)
-    plt.errorbar(np.arange(0, max_iter), y_min_mean[j,:], yerr=y_min_std[j,:], fmt='-o')
-plt.show()
+# y_min_mean = np.zeros((sig_scale.shape[0],max_iter))
+# y_min_std = np.zeros((sig_scale.shape[0],max_iter))
+# y_min_temp = np.zeros((repeat, max_iter))
+# for j, sigma_inv in enumerate(sig_scale):
+#     for i in np.arange(repeat):
+#         y = solution[i,j,1]
+#         for k in np.arange(y.shape[0]):
+#             y_min_temp[i, k] = np.min(y[:k+1])
+#         y_min_temp[i, y.shape[0]:] = y_min_temp[i, y.shape[0]-1]
+#     y_min_mean[j,:] = np.mean(y_min_temp, axis=0)
+#     y_min_std[j,:] = np.std(y_min_temp, axis=0)
+#     plt.errorbar(np.arange(0, max_iter), y_min_mean[j,:], yerr=y_min_std[j,:], fmt='-o')
+# plt.show()
 
+solution_X = solution[0,2,0] # test sigma = 0.1
+solution_y = solution[0,2,1]
 from estimate_sigma import CovarianceEstimate
 ce = CovarianceEstimate(solution_X, solution_y, bounds, num_ini_guess)
-sig_scale = np.array([0.01, 0.1, 1., 10, 100])
-for s in sig_scale:
+sig_scale = np.array([0.01, 0.1, 1., 10.])
+alpha_set = np.array([0.01, 0.1, 1., 10., 100.])
+grid_result = np.zeros((sig_scale.shape[0], alpha_set.shape[0]))
+for i, s in enumerate(sig_scale):
     sig_inv = np.ones(2)*s
-    print ce.model.obj(sig_inv)
+    for j, alpha in enumerate(alpha_set):
+        grid_result[i,j] = ce.model.obj(sig_inv, alpha)
+
+wait = 1
 # f, best_sigma = ce.solve()
 
 # file_address = './estimated_sigma.pkl'

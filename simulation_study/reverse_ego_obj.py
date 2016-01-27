@@ -26,7 +26,7 @@ class Kriging():
         self.bounds = bounds
         self.num_ini_guess = num_ini_guess
         # setup random samples to calculate mean of expected improvement
-        self.samples = lhs(2, 10)
+        self.samples = lhs(2, 100)
         self.samples = self.samples*(self.bounds[:,1]-self.bounds[:,0])+self.bounds[:,0]
 
 
@@ -160,10 +160,10 @@ class Kriging():
         self.SI = old_sig
         return sampled_path
 
-    def obj(self, sig_inv):
+    def obj(self, sig_inv, alpha):
         path = self.f_path(sig_inv)
         sampled_path = self.sampled_f_path(sig_inv, self.samples)
-        log_prob = np.log(1./(1.+np.exp(sampled_path.T - path)))
+        log_prob = np.log(1./(1.+np.exp(alpha*(sampled_path.T - path))))
         self.recent_path = log_prob
 
         sum_improv = np.sum(self.recent_path)
