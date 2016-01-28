@@ -76,7 +76,7 @@ solution_y = solution[0,2,1]
 from estimate_sigma import CovarianceEstimate
 ce = CovarianceEstimate(solution_X, solution_y, bounds, num_ini_guess)
 sig_scale = np.array([0.01, 0.1, 1., 10.])
-alpha_set = np.array([0.01, 0.1, 1., 10., 100.])
+alpha_set = np.array([0.01, 0.1, 1., 10., 100. 1000])
 grid_result = np.zeros((sig_scale.shape[0], alpha_set.shape[0]))
 for i, s in enumerate(sig_scale):
     sig_inv = np.ones(2)*s
