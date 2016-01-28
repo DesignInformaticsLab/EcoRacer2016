@@ -4,6 +4,7 @@ from scipy.stats import norm
 from scipy.spatial.distance import pdist, cdist, squareform
 from scipy.linalg import pinv2, inv
 from pyDOE import lhs
+from scipy.misc import logsumexp
 
 class Kriging():
 
@@ -163,10 +164,12 @@ class Kriging():
     def obj(self, sig_inv, alpha):
         path = self.f_path(sig_inv)
         sampled_path = self.sampled_f_path(sig_inv, self.samples)
-        log_prob = np.log(1./(1.+np.exp(alpha*(sampled_path.T - path))))
-        self.recent_path = log_prob
+        # log_prob = np.log(1./(1.+np.sum(np.exp(alpha*(sampled_path.T - path)), axis=0)))
+        # sum_improv = np.sum(self.recent_path)
 
-        sum_improv = np.sum(self.recent_path)
+        log_prob = np.log(np.exp(alpha*path)) - logsumexp(alpha*np.vstack((sampled_path.T, path)).T, axis=1)
+        self.recent_path = log_prob
+        sum_improv = np.sum(log_prob)
 
         return sum_improv
 
