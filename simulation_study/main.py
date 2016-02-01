@@ -8,14 +8,30 @@ import pickle
 import os
 
 # branin function
-obj_name = 'branin'
-obj = lambda x1, x2: (x2-5./4./np.pi/np.pi*x1**2+5./np.pi*x1-6)**2 + 10.*(1-1./8/np.pi)*np.cos(x1) + 10.
+# obj_name = 'branin'
+# obj = lambda x1, x2: (x2-5./4./np.pi/np.pi*x1**2+5./np.pi*x1-6)**2 + 10.*(1-1./8/np.pi)*np.cos(x1) + 10.
+
+# obj_name = 'sixmin'
+# obj = lambda x, y: 4.*x**2 - 2.1*x**4 + x**6/3. + x*y + 4.*y**2 + 4.*y**4
+
+obj_name = 'rosenbrock-6dim'
+def obj(x1, x2, x3, x4, x5, x6):
+    x = np.array([x1, x2, x3, x4, x5, x6])
+    """The Rosenbrock function"""
+    return sum(100.0*(x[1:]-x[:-1]**2.0)**2.0 + (1-x[:-1])**2.0)  # from scipy.optimize
+
+
 sig_scale = np.array([0.01, 0.1, 1., 10.])
+
+
 # sig_scale = np.array([10.])
 max_iter = 100
 
 num_ini_guess = 5
-bounds = np.array([[-5, 10], [0, 15]])
+# bounds = np.array([[-5, 10], [0, 15]]) #  for branin
+bounds = np.array([[-3, 3], [-3, 3]])  # for sixmin
+bounds = np.array([[-5, 5], [-5, 5], [-5, 5],
+                   [-5, 5], [-5, 5], [-5, 5]])  # for rosenbrock-6dim
 repeat = 30
 
 file_address = './solution_obj_name_' + obj_name + '_maxiter_' + str(max_iter) + '_repeat_' + str(repeat) + '.pkl'
@@ -25,11 +41,11 @@ if not os.path.isfile(file_address):
     solution = np.empty((repeat, sig_scale.shape[0]), object)
     for i in np.arange(repeat):
         for j, sigma_inv in enumerate(sig_scale):
-            sig_inv = np.ones(2)*sigma_inv
-
+            # sig_inv = np.ones(2)*sigma_inv
+            sig_inv = np.ones(6)*sigma_inv
             solver = EGO(sig_inv, obj, bounds, max_iter, num_ini_guess)
             solution_X, solution_y = solver.solve()
-            solution[i,j] = (solution_X, solution_y)
+            solution[i, j] = (solution_X, solution_y)
 
     # save the solution
     with open(file_address, 'w') as f:
@@ -71,19 +87,19 @@ else:
 #     plt.errorbar(np.arange(0, max_iter), y_min_mean[j,:], yerr=y_min_std[j,:], fmt='-o')
 # plt.show()
 
-solution_X = solution[0,2,0] # test sigma = 0.1
-solution_y = solution[0,2,1]
-from estimate_sigma import CovarianceEstimate
-ce = CovarianceEstimate(solution_X, solution_y, bounds, num_ini_guess)
-sig_scale = np.array([0.01, 0.1, 1., 10.])
-alpha_set = np.array([0.01, 0.1, 1., 10., 100., 1000.])
-grid_result = np.zeros((sig_scale.shape[0], alpha_set.shape[0]))
-for i, s in enumerate(sig_scale):
-    sig_inv = np.ones(2)*s
-    for j, alpha in enumerate(alpha_set):
-        grid_result[i,j] = ce.model.obj(sig_inv, alpha)
-
-wait = 1
+# solution_X = solution[0,2,0] # test sigma = 0.1
+# solution_y = solution[0,2,1]
+# from estimate_sigma import CovarianceEstimate
+# ce = CovarianceEstimate(solution_X, solution_y, bounds, num_ini_guess)
+# sig_scale = np.array([0.01, 0.1, 1., 10.])
+# alpha_set = np.array([0.01, 0.1, 1., 10., 100., 1000.])
+# grid_result = np.zeros((sig_scale.shape[0], alpha_set.shape[0]))
+# for i, s in enumerate(sig_scale):
+#     sig_inv = np.ones(2)*s
+#     for j, alpha in enumerate(alpha_set):
+#         grid_result[i,j] = ce.model.obj(sig_inv, alpha)
+#
+# wait = 1
 # f, best_sigma = ce.solve()
 
 # file_address = './estimated_sigma.pkl'

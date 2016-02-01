@@ -25,14 +25,14 @@ class EGO():
         self.num_ini_guess = num_ini_guess # initial sample size
         self.initial_sample() # samples to start EGO
         self.opt_ini_guess = lhs(self.p, 10) # samples for internal max expectation
-        self.opt_ini_guess = self.opt_ini_guess*(self.bounds[:,1]-self.bounds[:,0])+self.bounds[:,0]
+        self.opt_ini_guess = self.opt_ini_guess*(self.bounds[:, 1]-self.bounds[:, 0])+self.bounds[:, 0]
 
     def solve(self):
         while not self.terminate():
             new_x = self.sample()
-            if new_x.shape[1]<2:
+            if new_x.shape[1] < 2:
                 break
-            new_y = self.obj(new_x[0,0], new_x[0,1])
+            new_y = self.obj(*new_x[0, :])
             self.X = np.vstack((self.X, new_x))
             self.y = np.hstack((self.y, new_y))
         return [self.X, self.y]
@@ -44,9 +44,9 @@ class EGO():
 
     def initial_sample(self):
         self.X = lhs(self.p, self.num_ini_guess)
-        self.X = self.X*(self.bounds[:,1]-self.bounds[:,0])+self.bounds[:,0]
-        self.y = self.obj(self.X[:, 0], self.X[:, 1])
-
+        self.X = self.X*(self.bounds[:, 1]-self.bounds[:, 0])+self.bounds[:, 0]
+        # self.y = self.obj(self.X[:, 0], self.X[:, 1])
+        self.y = self.obj(*self.X.T)
     def fit(self):
         self.R = self.R_ij(self.X)
         if np.linalg.matrix_rank(self.R) < self.R.shape[1]:
