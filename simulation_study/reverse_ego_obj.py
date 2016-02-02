@@ -168,7 +168,7 @@ class Kriging():
         # log_prob = np.log(1./(1.+np.sum(np.exp(alpha*(sampled_path.T - path)), axis=0)))
         # sum_improv = np.sum(self.recent_path)
 
-        log_prob = np.log(np.exp(alpha*path)) - logsumexp(alpha*np.vstack((sampled_path.T, path)).T, axis=1)
+        log_prob = alpha*path - logsumexp(alpha*np.vstack((sampled_path.T, path)).T, axis=1)
         self.recent_path = log_prob
         sum_improv = np.sum(log_prob)
 
