@@ -21,7 +21,7 @@ print solution[0,0,1].shape
 
 
 from estimate_sigma import CovarianceEstimate
-all_001_trials_rosen6 = np.zeros((30,4,4))
+all_1_trials_rosen6 = np.zeros((30,4,4))
 
 num_ini_guess = 5
 bounds = np.array([[-5, 5], [-5, 5], [-5, 5],
@@ -32,8 +32,8 @@ bounds = np.array([[-5, 5], [-5, 5], [-5, 5],
 
 for trial in range(30):
     print 'now calculating trial #'+str(trial+1)
-    solution_X = solution[trial, 0, 0] # test sigma = 0.01
-    solution_y = solution[trial, 0, 1]
+    solution_X = solution[trial, 3, 0] # test sigma = 0.01
+    solution_y = solution[trial, 3, 1]
 
     ce = CovarianceEstimate(solution_X, solution_y, bounds, num_ini_guess)
     sig_scale = np.array([0.01, 0.1, 1., 10.])
@@ -45,17 +45,17 @@ for trial in range(30):
         for j, alpha in enumerate(alpha_set):
     #         print j
             grid_result[i,j] = ce.model.obj(sig_inv, alpha)
-    all_001_trials_rosen6[trial, :, :] = grid_result[:]
+    all_1_trials_rosen6[trial, :, :] = grid_result[:]
     time.sleep(10)
 
 
-data = all_001_trials_rosen6
+data = all_1_trials_rosen6
 
 # Write the array to disk
-with file('all_001_trials_rosen6.txt', 'w') as outfile:
+with file('all_10_trials_rosen6.txt', 'w') as outfile:
     # I'm writing a header here just for the sake of readability
     # Any line starting with "#" will be ignored by numpy.loadtxt
-    outfile.write('# 0.01 sig - Array shape (trial/sig/alpha): {0}\n'.format(data.shape))
+    outfile.write('# 10.0 sig - Array shape (trial/sig/alpha): {0}\n'.format(data.shape))
 
     # Iterating through a ndimensional array produces slices along
     # the last axis. This is equivalent to data[i,:,:] in this case
