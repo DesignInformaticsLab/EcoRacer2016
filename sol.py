@@ -5,7 +5,8 @@ sys.path.insert(0, '../')
 from ego import Kriging
 from preprocess import Preprocess
 from reg import CovarianceEstimate
-
+import numpy as np
+import json
 
 # #
 # # get data from the game
@@ -23,8 +24,9 @@ from sklearn.preprocessing import StandardScaler, MinMaxScaler
 scale = MinMaxScaler((-1., 1.))
 X = scale.fit_transform(X)
 #
+bounds = np.array(30*[[-1., 1.]])
 # # get sigma estimate that maximizes the sum of expected improvements
-soln = CovarianceEstimate(X, y)
+soln = CovarianceEstimate(X, y, bounds=bounds)
 [obj_set, sigma_set] = soln.solve()
 
 # # pick the best solution

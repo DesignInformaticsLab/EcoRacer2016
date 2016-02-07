@@ -27,9 +27,10 @@ class CovarianceEstimate:
         solve(self): actual solver, currently EGO, that finds Sigma[1:30]
             that maximize total expected improvement
     '''
-    def __init__(self, X, y):
+    def __init__(self, X, y, bounds, num_ini_guess = 2):
         self.n = X.shape[1]
-        self.model = Kriging(np.ones(self.n)) # Fit Kriging on the data.
+        self.sigma_inv = np.ones(self.n) # default value
+        self.model = Kriging(self.sigma_inv, bounds, num_ini_guess) # Fit Kriging on the data.
         self.model.fit(X, y)
         self.input = X
         self.rem_eng = y
@@ -136,7 +137,7 @@ class CovarianceEstimate:
             x0 = np.ones(self.n)*s
             # x0 = np.random.random(30)*5.
 
-            func = lambda x: - self.model.obj(x)  # use this if switching from EGO
+            func = lambda x: -self.model.obj(x, alpha=10.)  # use this if switching from EGO, maximize the log likelihood
 
             lb = 0.01
             ub = 100.
@@ -146,7 +147,7 @@ class CovarianceEstimate:
             # these are some alternative functions, which use 'callbackF for verbosity'
             # print self.model.obj(x0)
             print 'Initializing at '+str(s)
-            res = opt.minimize(func, x0=x0, bounds=bounds, method='SLSQP', tol=1e-5,
+            res = opt.minimize(func, x0=x0, bounds=bounds, method='SLSQP', tol=1e-3,
                                options={'eps': 1e-2, 'iprint': 2, 'disp': True, 'maxiter': 100},
                                callback=self.callbackF)
             # res = opt.differential_evolution(func, bounds, disp=True, popsize=10)

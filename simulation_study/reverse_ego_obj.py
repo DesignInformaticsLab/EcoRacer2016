@@ -144,7 +144,7 @@ class Kriging():
         old_y = self.y[:]
         old_sig = self.SI[:]
 
-        #self.Sigma = sig  # replace stored sigma with supplied
+        # self.Sigma = sig  # replace stored sigma with supplied
         self.SI = np.diag(sig_inv)
 
         sample_size = samples.shape[0]

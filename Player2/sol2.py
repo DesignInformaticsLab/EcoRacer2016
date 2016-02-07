@@ -28,7 +28,9 @@ scale = MinMaxScaler((-1., 1.))
 X = scale.fit_transform(X)
 #
 # # get sigma estimate that maximizes the sum of expected improvements
-soln = CovarianceEstimate(X, y)
+bounds = np.array(31*[[-1., 1.]])
+
+soln = CovarianceEstimate(X, y, bounds=bounds)
 # sig_test = np.zeros(31)
 # sig_test[-1] = 2.6
 # soln.model.f_path(sig_test)

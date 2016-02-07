@@ -3,6 +3,8 @@ import numpy as np
 from scipy.stats import norm
 from scipy.spatial.distance import pdist, cdist, squareform
 from scipy.linalg import pinv2, inv
+from pyDOE import lhs
+from scipy.misc import logsumexp
 
 class Kriging():
 
@@ -10,7 +12,7 @@ class Kriging():
     This is the actual optimization class, that will interface with the higher level regression.
     """
     #def __init__(self, sig, X, y):
-    def __init__(self, sig_inv):
+    def __init__(self, sig_inv, bounds, num_ini_guess=2):
         #self.X = X
         #self.y = y
 
@@ -21,6 +23,14 @@ class Kriging():
         self.recent_path = np.array([])
 
         # self.model = np.array([])
+
+        self.bounds = bounds
+        self.num_ini_guess = num_ini_guess
+        # setup random samples to calculate mean of expected improvement
+        # self.samples = lhs(2, 100)  # for 2-dim funcs
+        self.samples = lhs(31, 500)  # for 6-dim rosenbrock
+        self.samples = self.samples*(self.bounds[:, 1]-self.bounds[:, 0])+self.bounds[:, 0]
+
 
     #def fit(self):
     def fit(self, X, y):
@@ -69,7 +79,8 @@ class Kriging():
         if np.linalg.matrix_rank(self.R) < self.R.shape[1]:
             return 0
         # WARNING: this is getting runtime warnings (invalid value encountered in divide)
-        mse = 1-r.T.dot(self.RI.dot(r))+(1.-ones.T.dot(self.RI.dot(r)))**2/(1. - ones.T.dot(self.RI.dot(ones)))
+        mse = np.max((0,
+                      1-r.T.dot(self.RI.dot(r))+(1.-ones.T.dot(self.RI.dot(r)))**2/(1. - ones.T.dot(self.RI.dot(ones)))))
 
         sig = np.sqrt((self.y-self.b).T.dot(self.RI.dot(self.y-self.b))/dim)
 
@@ -84,8 +95,11 @@ class Kriging():
         y_h = self.yhat(x)
         ymax = np.max(self.y)
         s = self.get_s(x)
-        z = np.divide(np.subtract(y_h, ymax), s)
-        pdf = norm.pdf(z)
+        z = np.divide(np.subtract(y_h, ymax), s+1e-12)
+        if s == 0:
+            pdf = 0
+        else:
+            pdf = norm.pdf(z)
         cdf = norm.cdf(z)
         f_x = np.multiply(np.subtract(y_h, ymax), cdf) + np.multiply(s, pdf)
         return f_x
@@ -100,8 +114,8 @@ class Kriging():
         self.SI = np.diag(sig_inv)
         path = np.zeros(self.n)
         # print self.n, path.shape
-        self.fit(old_X[:2],old_y[:2])  # first observation
-        for i, x in enumerate(old_X[2:], 2):
+        self.fit(old_X[:self.num_ini_guess],old_y[:self.num_ini_guess])  # first observation
+        for i, x in enumerate(old_X[self.num_ini_guess:], self.num_ini_guess):
 
             path[i-1] = self.f(x)
             self.fit(old_X[:i+1], old_y[:i+1])
@@ -112,11 +126,10 @@ class Kriging():
         self.SI = old_sig
 
         self.recent_path = path[:]
-        return np.nan_to_num(path)
-        # return path
+        # return np.nan_to_num(path)
+        return path
 
-    def f_by_sig(self, sig_inv):
-        """find the expected improvement of the last move, based on some sigma. """
+    def sampled_f_path(self, sig_inv, samples):
         # save whole database as a copy
         old_X = self.X[:]
         old_y = self.y[:]
@@ -125,18 +138,31 @@ class Kriging():
         # self.Sigma = sig  # replace stored sigma with supplied
         self.SI = np.diag(sig_inv)
 
-        self.fit(old_X[:-1], old_y[:-1])  # first observation
-        f = self.f(old_X[-1])
+        sample_size = samples.shape[0]
+        sampled_path = np.zeros((self.n, sample_size))
+        # print self.n, path.shape
+        self.fit(old_X[:self.num_ini_guess],old_y[:self.num_ini_guess])  # first observation
+        for i, x in enumerate(old_X[self.num_ini_guess:], self.num_ini_guess):
+            for j, xx in enumerate(samples):
+                sampled_path[i-1,j] = self.f(xx)
+            self.fit(old_X[:i+1], old_y[:i+1])
+
+        # return original database to storage
         self.X = old_X
         self.y = old_y
         self.SI = old_sig
-        return np.nan_to_num(f)
+        return sampled_path
 
-    def obj(self, sig_inv):
-
+    def obj(self, sig_inv, alpha):
         path = self.f_path(sig_inv)
-        sum_improv = np.sum(np.log(path+1))
-        # sum_improv = np.sum(path)
+        sampled_path = self.sampled_f_path(sig_inv, self.samples)
+        # log_prob = np.log(1./(1.+np.sum(np.exp(alpha*(sampled_path.T - path)), axis=0)))
+        # sum_improv = np.sum(self.recent_path)
+
+        log_prob = alpha*path - logsumexp(alpha*np.vstack((sampled_path.T, path)).T, axis=1)
+        self.recent_path = log_prob
+        sum_improv = np.sum(log_prob)
+
         return sum_improv
 
         # # save whole database as a copy
