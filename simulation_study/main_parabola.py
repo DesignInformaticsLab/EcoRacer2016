@@ -24,20 +24,21 @@ import os
 obj_name = 'parabolic'
 obj = lambda x, y: x**2 + y**2
 
-sig_scale = np.array([0.01, 0.1, 1., 10.])
+# sig_scale = np.array([0.01, 0.1, 1., 10.])
 
 
-# sig_scale = np.array([10.])
+sig_scale = np.array([1.])
 max_iter = 100
 
-num_ini_guess = 5
+num_ini_guess = 2
 # bounds = np.array([[-5, 10], [0, 15]]) #  for branin
 bounds = np.array([[-3, 3], [-3, 3]])  # for sixmin
-bounds = np.array([[-5, 5], [-5, 5], [-5, 5],
-                   [-5, 5], [-5, 5], [-5, 5]])  # for rosenbrock-6dim
+# bounds = np.array([[-5, 5], [-5, 5], [-5, 5],
+#                    [-5, 5], [-5, 5], [-5, 5]])  # for rosenbrock-6dim
 repeat = 30
-
-file_address = './solution_obj_name_' + obj_name + '_maxiter_' + str(max_iter) + '_repeat_' + str(repeat) + '.pkl'
+extreme = .01
+file_address = './solution_obj_name_' + obj_name + '_maxiter_' + str(max_iter) + \
+               '_repeat_' + str(repeat) + 'x'+str(extreme) + '.pkl'
 
 
 if not os.path.isfile(file_address):
@@ -45,14 +46,15 @@ if not os.path.isfile(file_address):
     for i in np.arange(repeat):
         for j, sigma_inv in enumerate(sig_scale):
             # sig_inv = np.ones(2)*sigma_inv
-            sig_inv = np.ones(6)*sigma_inv
+            sig_inv = np.ones(2)*sigma_inv
+            sig_inv[0] = extreme
             solver = EGO(sig_inv, obj, bounds, max_iter, num_ini_guess)
             solution_X, solution_y = solver.solve()
             solution[i, j] = (solution_X, solution_y)
 
     # save the solution
     with open(file_address, 'w') as f:
-        pickle.dump({'solution': solution.tolist(), 'sig_scale': sig_scale.tolist(), 'obj_name': obj_name,
+        pickle.dump({'solution': solution.tolist(), 'extreme': extreme, 'obj_name': obj_name,
                      'max_iter': max_iter}, f)
     f.close()
 else:
@@ -60,7 +62,7 @@ else:
         data = pickle.load(f)
     f.close()
     solution = np.array(data['solution'])
-    sig_scale = np.array(data['sig_scale'])
+    # sig_scale = np.array(data['sig_scale'])
     max_iter = data['max_iter']
 
     # solution_X = np.array(solution['X'])
