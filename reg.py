@@ -137,7 +137,7 @@ class CovarianceEstimate:
             x0 = np.ones(self.n)*s
             # x0 = np.random.random(30)*5.
 
-            func = lambda x: -self.model.obj(x, alpha=10.)  # use this if switching from EGO, maximize the log likelihood
+            func = lambda x: -self.model.obj(x, alpha=1.)  # use this if switching from EGO, maximize the log likelihood
 
             lb = 0.01
             ub = 100.
