@@ -24,8 +24,6 @@ class EGO():
         self.max_iter = max_iter # EGO max iter
         self.num_ini_guess = num_ini_guess # initial sample size
         self.initial_sample() # samples to start EGO
-        self.opt_ini_guess = lhs(self.p, 10) # samples for internal max expectation
-        self.opt_ini_guess = self.opt_ini_guess*(self.bounds[:, 1]-self.bounds[:, 0])+self.bounds[:, 0]
 
     def solve(self):
         while not self.terminate():
@@ -95,7 +93,7 @@ class EGO():
 
         # WARNING: this is getting runtime warnings (invalid value encountered in divide)
         mse = np.max((0,
-                      1-r.T.dot(self.RI.dot(r))+(1.-ones.T.dot(self.RI.dot(r)))**2/(1. - ones.T.dot(self.RI.dot(ones)))))
+                      1-r.T.dot(self.RI.dot(r))+(1.-ones.T.dot(self.RI.dot(r)))**2/(ones.T.dot(self.RI.dot(ones)))))
 
         sig = np.sqrt((self.y-self.b).T.dot(self.RI.dot(self.y-self.b))/dim)
 
@@ -125,9 +123,14 @@ class EGO():
             pdf = norm.pdf(z)
         cdf = norm.cdf(z)
         f_x = np.multiply(np.subtract(ymin, y_h), cdf) + np.multiply(s, pdf)
+        if abs(f_x)<1e-3:
+            wait = 1
+
         return f_x
 
     def sample(self): # sample with max expected improvement
+        self.opt_ini_guess = lhs(self.p, 10) # samples for internal max expectation
+        self.opt_ini_guess = self.opt_ini_guess*(self.bounds[:, 1]-self.bounds[:, 0])+self.bounds[:, 0]
         p = self.opt_ini_guess.shape[1] # problem size
         n = self.opt_ini_guess.shape[0] # number of optimization runs
         self.fit()
@@ -135,8 +138,8 @@ class EGO():
         result_x = np.zeros((n, p))
         result_f = np.zeros((n, 1))
         for i, x0 in enumerate(self.opt_ini_guess):
-            res = opt.minimize(func, x0=x0, bounds=self.bounds, method='SLSQP', tol=1e-5,
-                                   options={'eps': 1e-2, 'iprint': 2, 'disp': True, 'maxiter': 100})
+            res = opt.minimize(func, x0=x0, bounds=self.bounds, method='slsqp', tol=1e-5,
+                                   options={'eps': 1e-8, 'iprint': 2, 'disp': True, 'maxiter': 100})
             result_f[i] = res.fun
             result_x[i] = res.x
             if np.any(np.isnan(res.x)==True):

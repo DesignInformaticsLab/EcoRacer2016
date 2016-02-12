@@ -82,7 +82,7 @@ class Kriging():
             return 0
         # WARNING: this is getting runtime warnings (invalid value encountered in divide)
         mse = np.max((0,
-                      1-r.T.dot(self.RI.dot(r))+(1.-ones.T.dot(self.RI.dot(r)))**2/(1. - ones.T.dot(self.RI.dot(ones)))))
+                      1-r.T.dot(self.RI.dot(r))+(1.-ones.T.dot(self.RI.dot(r)))**2/(ones.T.dot(self.RI.dot(ones)))))
 
         sig = np.sqrt((self.y-self.b).T.dot(self.RI.dot(self.y-self.b))/dim)
 
