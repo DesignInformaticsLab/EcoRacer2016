@@ -7,61 +7,62 @@ import matplotlib.pyplot as plt
 import pickle
 import os
 
+
+
 # branin function
-# obj_name = 'branin'
-# obj = lambda x1, x2: (x2-5./4./np.pi/np.pi*x1**2+5./np.pi*x1-6)**2 + 10.*(1-1./8/np.pi)*np.cos(x1) + 10.
+obj_name1 = 'branin'
+obj1 = lambda x1, x2: (x2-5./4./np.pi/np.pi*x1**2+5./np.pi*x1-6)**2 + 10.*(1-1./8/np.pi)*np.cos(x1) + 10.
 
-# obj_name = 'sixmin'
-# obj = lambda x, y: 4.*x**2 - 2.1*x**4 + x**6/3. + x*y + 4.*y**2 + 4.*y**4
+obj_name2 = 'sixmin'
+obj2 = lambda x, y: 4.*x**2 - 2.1*x**4 + x**6/3. + x*y + 4.*y**2 + 4.*y**4
 
-# obj_name = 'rosenbrock-6dim'
-# def obj(x1, x2, x3, x4, x5, x6):
-#     x = np.array([x1, x2, x3, x4, x5, x6])
-#     """The Rosenbrock function"""
-#     return sum(100.0*(x[1:]-x[:-1]**2.0)**2.0 + (1-x[:-1])**2.0)  # from scipy.optimize
+obj_name3 = 'rosenbrock-6dim'
+def obj3(x1, x2, x3, x4, x5, x6):
+    x = np.array([x1, x2, x3, x4, x5, x6])
+    """The Rosenbrock function"""
+    return sum(100.0*(x[1:]-x[:-1]**2.0)**2.0 + (1-x[:-1])**2.0)  # from scipy.optimize
 
-# Parabolic:
-obj_name = 'parabolic'
-obj = lambda x, y: x**2 + y**2
+bounds1 = np.array([[-5, 10], [0, 15]]) #  for branin
+bounds2 = np.array([[-3, 3], [-3, 3]])  # for sixmin
+bounds3 = np.array([[-5, 5], [-5, 5], [-5, 5],
+                   [-5, 5], [-5, 5], [-5, 5]])  # for rosenbrock-6dim
 
-sig_scale = np.array([0.01, 0.1, 1., 10.])
 
-
-# sig_scale = np.array([10.])
+obj_names = [obj_name1, obj_name2, obj_name3]
+objs = [obj1, obj2, obj3]
+boundss = [bounds1, bounds2, bounds3]
+sig_scale = np.array([0.01, 0.1, 1.0, 10.])
 max_iter = 100
 
-num_ini_guess = 5
-# bounds = np.array([[-5, 10], [0, 15]]) #  for branin
-bounds = np.array([[-3, 3], [-3, 3]])  # for sixmin
-bounds = np.array([[-5, 5], [-5, 5], [-5, 5],
-                   [-5, 5], [-5, 5], [-5, 5]])  # for rosenbrock-6dim
+num_ini_guess = 10
 repeat = 30
+for n, k in enumerate(obj_names):
 
-file_address = './solution_obj_name_' + obj_name + '_maxiter_' + str(max_iter) + '_repeat_' + str(repeat) + '.pkl'
+    file_address = './solution_obj_name_' + obj_names[n] + '_maxiter_' + str(max_iter) + '_repeat_' + str(repeat) + '.pkl'
 
 
-if not os.path.isfile(file_address):
-    solution = np.empty((repeat, sig_scale.shape[0]), object)
-    for i in np.arange(repeat):
-        for j, sigma_inv in enumerate(sig_scale):
-            # sig_inv = np.ones(2)*sigma_inv
-            sig_inv = np.ones(6)*sigma_inv
-            solver = EGO(sig_inv, obj, bounds, max_iter, num_ini_guess)
-            solution_X, solution_y = solver.solve()
-            solution[i, j] = (solution_X, solution_y)
+    if not os.path.isfile(file_address):
+        solution = np.empty((repeat, sig_scale.shape[0]), object)
+        for i in np.arange(repeat):
+            for j, sigma_inv in enumerate(sig_scale):
+                # sig_inv = np.ones(2)*sigma_inv
+                sig_inv = np.ones(boundss[n].shape[0])*sigma_inv
+                solver = EGO(sig_inv, objs[n], boundss[n], max_iter, num_ini_guess)
+                solution_X, solution_y = solver.solve()
+                solution[i, j] = (solution_X, solution_y)
 
-    # save the solution
-    with open(file_address, 'w') as f:
-        pickle.dump({'solution': solution.tolist(), 'sig_scale': sig_scale.tolist(), 'obj_name': obj_name,
-                     'max_iter': max_iter}, f)
-    f.close()
-else:
-    with open(file_address, 'r') as f:
-        data = pickle.load(f)
-    f.close()
-    solution = np.array(data['solution'])
-    sig_scale = np.array(data['sig_scale'])
-    max_iter = data['max_iter']
+        # save the solution
+        with open(file_address, 'w') as f:
+            pickle.dump({'solution': solution.tolist(), 'sig_scale': sig_scale.tolist(), 'obj_name': obj_names[n],
+                         'max_iter': max_iter}, f)
+        f.close()
+    else:
+        with open(file_address, 'r') as f:
+            data = pickle.load(f)
+        f.close()
+        solution = np.array(data['solution'])
+        sig_scale = np.array(data['sig_scale'])
+        max_iter = data['max_iter']
 
     # solution_X = np.array(solution['X'])
     # solution_y = np.array(solution['y'])
