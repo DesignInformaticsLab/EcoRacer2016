@@ -148,8 +148,8 @@ class CovarianceEstimate:
             # these are some alternative functions, which use 'callbackF for verbosity'
             # print self.model.obj(x0)
             print 'Initializing at '+str(s)
-            res = opt.minimize(func, x0=x0, bounds=bounds, method='L-BFGS-B', tol=1e-3,
-                               options={'eps': 1e-2, 'iprint': 2, 'disp': True, 'maxiter': 100},
+            res = opt.minimize(func, x0=x0, bounds=bounds, method='L-BFGS-B',
+                               options={'eps': 1e-5, 'iprint': 2, 'disp': True, 'maxiter': 100},
                                callback=self.callbackF)
             # res = opt.differential_evolution(func, bounds, disp=True, popsize=10)
             # res = opt.basinhopping(func, x0=x0, disp=True)

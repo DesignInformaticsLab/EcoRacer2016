@@ -30,7 +30,7 @@ X = scale.fit_transform(X)
 # # get sigma estimate that maximizes the sum of expected improvements
 bounds = np.array(31*[[-1., 1.]])
 
-soln = CovarianceEstimate(X, y, bounds=bounds, alpha=10.0)
+soln = CovarianceEstimate(X, y, bounds=bounds, alpha=9.103)
 # sig_test = np.zeros(31)
 # sig_test[-1] = 2.6
 # soln.model.f_path(sig_test)
