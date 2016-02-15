@@ -9,7 +9,7 @@ import pandas as pd
 import pickle
 import time
 
-file_address = 'solution_obj_name_rosenbrock-6dim_maxiter_100_repeat_30.pkl'
+file_address = 'solution_obj_name_branin_maxiter_100_repeat_30.pkl'
 with open(file_address, 'r') as f:
     dat = pickle.load(f)
 
@@ -29,8 +29,8 @@ for no, label in enumerate(sigs):
     num_ini_guess = 10
     bounds = np.array([[-5, 5], [-5, 5], [-5, 5],
                        [-5, 5], [-5, 5], [-5, 5]])  # for rosenbrock-6dim
-    # bounds = np.array([[-3,3],[-3,3]])
-    # bounds = np.array([[-5, 10], [0, 15]])
+    # bounds = np.array([[-3,3],[-3,3]])  # for sixmin
+    bounds = np.array([[-5, 10], [0, 15]])  # for branin
     # for sig_no in enumerate([0.01,0.1,1.0,10.]):
 
     for trial in range(30):

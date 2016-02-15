@@ -9,13 +9,13 @@ import pandas as pd
 import pickle
 import time
 
-file_address = 'solution_obj_name_rosenbrock-6dim_maxiter_100_repeat_30.pkl'
+file_address = 'solution_obj_name_sixmin_maxiter_100_repeat_30.pkl'
 with open(file_address, 'r') as f:
     dat = pickle.load(f)
 
 solution = np.array(dat['solution'])
 print solution.shape
-print solution[0,0,1].shape
+print solution[0, 0, 1].shape
 
 # DO NOT RUN UNLESS YOU HAVE A LONG TIME TO WAIT!
 
@@ -24,13 +24,13 @@ from estimate_sigma import CovarianceEstimate
 
 sigs = ['0.01', '0.1', '1.0', '10.0']
 for no, label in enumerate(sigs):
-    trials = np.zeros((30,4,4))
+    trials = np.zeros((30, 4, 4))
     print 'now on true_sig = ', label
     num_ini_guess = 10
-    bounds = np.array([[-5, 5], [-5, 5], [-5, 5],
-                       [-5, 5], [-5, 5], [-5, 5]])  # for rosenbrock-6dim
-    # bounds = np.array([[-3,3],[-3,3]])
-    # bounds = np.array([[-5, 10], [0, 15]])
+    # bounds = np.array([[-5, 5], [-5, 5], [-5, 5],
+    #                    [-5, 5], [-5, 5], [-5, 5]])  # for rosenbrock-6dim
+    bounds = np.array([[-3, 3], [-3, 3]])  # for sixmin
+    # bounds = np.array([[-5, 10], [0, 15]])  # for branin
     # for sig_no in enumerate([0.01,0.1,1.0,10.]):
 
     for trial in range(30):
@@ -47,7 +47,7 @@ for no, label in enumerate(sigs):
             sig_inv = np.ones(6)*s
             for j, alpha in enumerate(alpha_set):
         #         print j
-                grid_result[i,j] = ce.model.obj(sig_inv, alpha)
+                grid_result[i, j] = ce.model.obj(sig_inv, alpha)
         trials[trial, :, :] = grid_result[:]
         time.sleep(10)
 
@@ -55,7 +55,7 @@ for no, label in enumerate(sigs):
     data = np.copy(trials)
 
     # Write the array to disk
-    with file('all_'+label+'_trials_rosen6.txt', 'w') as outfile:
+    with file('all_'+label+'_trials_sixmin.txt', 'w') as outfile:
         # I'm writing a header here just for the sake of readability
         # Any line starting with "#" will be ignored by numpy.loadtxt
         outfile.write('# ' +label+'sig - Array shape (trial/sig/alpha): {0}\n'.format(data.shape))
