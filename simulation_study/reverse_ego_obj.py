@@ -28,7 +28,7 @@ class Kriging():
         self.num_ini_guess = num_ini_guess
         # setup random samples to calculate mean of expected improvement
         # self.samples = lhs(2, 100)  # for 2-dim funcs
-        self.samples = lhs(6, 100)  # for 6-dim rosenbrock
+        self.samples = lhs(self.bounds.shape[0], 100)  # for 6-dim rosenbrock
         self.samples = self.samples*(self.bounds[:, 1]-self.bounds[:, 0])+self.bounds[:, 0]
 
 
