@@ -55,7 +55,7 @@ for no, label in enumerate(sigs):
     data = np.copy(trials)
 
     # Write the array to disk
-    with file('all_'+label+'_trials_rosen6.txt', 'w') as outfile:
+    with file('all_'+label+'_trials_branin.txt', 'w') as outfile:
         # I'm writing a header here just for the sake of readability
         # Any line starting with "#" will be ignored by numpy.loadtxt
         outfile.write('# ' +label+'sig - Array shape (trial/sig/alpha): {0}\n'.format(data.shape))

@@ -13,9 +13,9 @@ file_address = 'solution_obj_name_sixmin_maxiter_100_repeat_30.pkl'
 with open(file_address, 'r') as f:
     dat = pickle.load(f)
 
-solution = np.array(dat['solution'])
-print solution.shape
-print solution[0, 0, 1].shape
+solution = dat['solution']
+# print solution.shape
+# print solution[0, 0, 1].shape
 
 # DO NOT RUN UNLESS YOU HAVE A LONG TIME TO WAIT!
 
@@ -35,8 +35,8 @@ for no, label in enumerate(sigs):
 
     for trial in range(30):
         print 'now calculating trial #'+str(trial+1)
-        solution_X = solution[trial, no, 0] # test sigma = 0.01
-        solution_y = solution[trial, no, 1]
+        solution_X = solution[trial][no][0]  # test sigma = 0.01
+        solution_y = solution[trial][no][1]
 
         ce = CovarianceEstimate(solution_X, solution_y, bounds, num_ini_guess)
         sig_scale = np.array([0.01, 0.1, 1., 10.])
@@ -44,7 +44,7 @@ for no, label in enumerate(sigs):
         # alpha_set = np.array([1e-5, 1e-4, 1e-3, 1e-2])
         grid_result = np.zeros((sig_scale.shape[0], alpha_set.shape[0]))
         for i, s in enumerate(sig_scale):
-            sig_inv = np.ones(6)*s
+            sig_inv = np.ones(bounds.shape[0])*s
             for j, alpha in enumerate(alpha_set):
         #         print j
                 grid_result[i, j] = ce.model.obj(sig_inv, alpha)
