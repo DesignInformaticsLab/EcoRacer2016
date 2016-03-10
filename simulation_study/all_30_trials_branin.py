@@ -27,8 +27,8 @@ for no, label in enumerate(sigs):
     trials = np.zeros((30,4,4))
     print 'now on true_sig = ', label
     num_ini_guess = 10
-    bounds = np.array([[-5, 5], [-5, 5], [-5, 5],
-                       [-5, 5], [-5, 5], [-5, 5]])  # for rosenbrock-6dim
+    # bounds = np.array([[-5, 5], [-5, 5], [-5, 5],
+    #                    [-5, 5], [-5, 5], [-5, 5]])  # for rosenbrock-6dim
     # bounds = np.array([[-3,3],[-3,3]])  # for sixmin
     bounds = np.array([[-5, 10], [0, 15]])  # for branin
     # for sig_no in enumerate([0.01,0.1,1.0,10.]):

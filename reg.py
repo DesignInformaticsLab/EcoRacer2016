@@ -9,7 +9,7 @@ from ego import Kriging
 import numpy as np
 import scipy.optimize as opt
 import matplotlib.pyplot as plt
-
+from tqdm import tqdm
 
 class CovarianceEstimate:
     '''
@@ -36,6 +36,7 @@ class CovarianceEstimate:
         self.rem_eng = y
         self.sct = None
         self.alpha = alpha
+        self.pbar = None
         # self.fig = None
         # self.ax = None
         # self.Nfeval = 0
@@ -56,6 +57,8 @@ class CovarianceEstimate:
         plt.gca().set_xlabel('play number')
         plt.gca().set_ylabel('Expected Improvement Path')
         plt.pause(0.0001)
+        if self.pbar is not None:
+            self.pbar.update()
         # self.ax.set_title('Point Jacobi approximation after '+str(k)+' iterations')
         # plt.pause(.002)
         # print 'Hi!'
@@ -94,8 +97,9 @@ class CovarianceEstimate:
         result_f = np.zeros(test_scale.shape)
 
 
-
+        # pbar = tqdm(total=test_scale.size)
         for i, s in enumerate(test_scale):
+            self.pbar=tqdm()
             if plot:
                 self.sct = None
                 ax = None
@@ -151,6 +155,7 @@ class CovarianceEstimate:
             res = opt.minimize(func, x0=x0, bounds=bounds, method='L-BFGS-B',
                                options={'eps': 1e-5, 'iprint': 2, 'disp': True, 'maxiter': 100},
                                callback=self.callbackF)
+            # pbar.update(1)
             # res = opt.differential_evolution(func, bounds, disp=True, popsize=10)
             # res = opt.basinhopping(func, x0=x0, disp=True)
 
@@ -164,6 +169,7 @@ class CovarianceEstimate:
             # return bo.res['max']
             result_f[i] = res.fun
             result_x[i] = res.x
+            self.pbar.close()
         return result_f, result_x
 
 
