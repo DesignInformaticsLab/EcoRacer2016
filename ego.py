@@ -153,6 +153,31 @@ class Kriging():
         self.SI = old_sig
         return sampled_path
 
+    def broadcast_f_path(self, sig_inv, samples):
+        # save whole database as a copy
+        old_X = self.X[:]
+        old_y = self.y[:]
+        old_sig = self.SI[:]
+
+        # self.Sigma = sig  # replace stored sigma with supplied
+        self.SI = np.diag(sig_inv)
+
+        sample_size = samples.shape[0]
+        sampled_path = np.zeros((self.n, sample_size))
+        # print self.n, path.shape
+        self.fit(old_X[:self.num_ini_guess], old_y[:self.num_ini_guess])  # first observation
+        for i, x in enumerate(old_X[self.num_ini_guess:], self.num_ini_guess):
+            sampled_path[i - 1] = np.apply_along_axis(self.f, 1, self.samples).T
+            # for j, xx in enumerate(samples):
+            #     sampled_path[i - 1, j] = self.f(xx)
+            self.fit(old_X[:i + 1], old_y[:i + 1])
+
+        # return original database to storage
+        self.X = old_X
+        self.y = old_y
+        self.SI = old_sig
+        return sampled_path
+
     def obj(self, sig_inv, alpha):
         path = self.f_path(sig_inv)
         sampled_path = self.sampled_f_path(sig_inv, self.samples)

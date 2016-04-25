@@ -9,7 +9,7 @@ from ego import Kriging
 import numpy as np
 import scipy.optimize as opt
 import matplotlib.pyplot as plt
-from tqdm import tqdm
+# from tqdm import tqdm
 
 class CovarianceEstimate:
     '''
@@ -99,7 +99,7 @@ class CovarianceEstimate:
 
         # pbar = tqdm(total=test_scale.size)
         for i, s in enumerate(test_scale):
-            self.pbar=tqdm()
+            # self.pbar=tqdm()
             if plot:
                 self.sct = None
                 ax = None
