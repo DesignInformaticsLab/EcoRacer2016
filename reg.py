@@ -36,7 +36,7 @@ class CovarianceEstimate:
         self.rem_eng = y
         self.sct = None
         self.alpha = alpha
-        self.pbar = None
+        # self.pbar = None
         # self.fig = None
         # self.ax = None
         # self.Nfeval = 0
@@ -57,8 +57,8 @@ class CovarianceEstimate:
         plt.gca().set_xlabel('play number')
         plt.gca().set_ylabel('Expected Improvement Path')
         plt.pause(0.0001)
-        if self.pbar is not None:
-            self.pbar.update()
+        # if self.pbar is not None:
+        #     self.pbar.update()
         # self.ax.set_title('Point Jacobi approximation after '+str(k)+' iterations')
         # plt.pause(.002)
         # print 'Hi!'
@@ -153,7 +153,7 @@ class CovarianceEstimate:
             # print self.model.obj(x0)
             print 'Initializing at '+str(s)
             res = opt.minimize(func, x0=x0, bounds=bounds, method='L-BFGS-B',
-                               options={'eps': 1e-5, 'iprint': 2, 'disp': True, 'maxiter': 100},
+                               options={'eps': 1e-7, 'iprint': 2, 'disp': True, 'maxiter': 100},
                                callback=self.callbackF)
             # pbar.update(1)
             # res = opt.differential_evolution(func, bounds, disp=True, popsize=10)
@@ -169,7 +169,7 @@ class CovarianceEstimate:
             # return bo.res['max']
             result_f[i] = res.fun
             result_x[i] = res.x
-            self.pbar.close()
+            # self.pbar.close()
         return result_f, result_x
 
 

@@ -76,13 +76,24 @@ class Preprocess:
     def ready_player_one(self, place):
         # place must be less than 7.
         top6 = [78, 122, 166, 70, 67, 69] #best players
-        m1, m2, m3, m4, m5, m6 = [self.full_tab.userid.values==i for i in top6]
+        m1, m2, m3, m4, m5, m6 = [self.full_tab.userid.values == i for i in top6]
         masks = [m1, m2, m3, m4, m5, m6]
         X = self.all_dat[masks[place-1]]
         y = self.full_tab["rem_nrg"].values[masks[place-1]]
 
         X_pca = self.pca.transform(X)
         X_pca = np.vstack((X_pca.T, self.full_tab["finaldrive"].values[masks[place-1]])).T
+        return (X_pca, y)
+
+    def ready_bad_player(self):
+        # mask = [self.full_tab.userid.values == 1]  # gets mediocre score (~12 plays
+        mask = [self.full_tab.userid.values == 79]  # gets zero score (~12 plays)
+
+        X = self.all_dat[mask]
+        y = self.full_tab["rem_nrg"].values[mask]
+
+        X_pca = self.pca.transform(X)
+        X_pca = np.vstack((X_pca.T, self.full_tab["finaldrive"].values[mask])).T
         return (X_pca, y)
 
     def prep_by_id(self, play_no):
