@@ -30,20 +30,24 @@ bounds3 = np.array([[-2, 2], [-2, 2], [-2, 2],
 fopt1 = 0.397887
 fopt2 = -1.0316
 fopt3 = 0
-fopt = [fopt1, fopt2, fopt3]
+# fopt = [fopt1, fopt2, fopt3]
+fopt = [fopt2]
 
-obj_names = [obj_name1, obj_name2, obj_name3]
-objs = [obj1, obj2, obj3]
-boundss = [bounds1, bounds2, bounds3]
+# obj_names = [obj_name1, obj_name2, obj_name3]
+obj_names = [obj_name2]
+# objs = [obj1, obj2, obj3]
+objs = [obj2]
+# boundss = [bounds1, bounds2, bounds3]
+boundss = [bounds2]
 sig_scale = np.array([0.01, 0.1, 1.0, 10.])
-max_iter = 200
+max_iter = 100
 
 num_ini_guess = 10
-repeat = 1
+repeat = 30
 for n, k in enumerate(obj_names):
 
     file_address = './solution_obj_name_' + obj_names[n] + '_maxiter_' + str(max_iter)\
-                   + '_repeat_' + str(repeat) + '_test.pkl'
+                   + '_repeat_' + str(repeat) + '.pkl'
 
 
     if not os.path.isfile(file_address):
