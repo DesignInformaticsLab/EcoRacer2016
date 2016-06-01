@@ -28,7 +28,29 @@ scale = MinMaxScaler((-1., 1.))
 X = scale.fit_transform(X)
 #
 # # get sigma estimate that maximizes the sum of expected improvements
-soln = CovarianceEstimate(X, y)
+
+# store all pcs to a json
+from sklearn.externals import joblib
+temp = joblib.load('../eco_full_pca.pkl')
+
+file_address = 'ica.json'
+with open(file_address, 'wb') as f:
+    json.dump(temp.components_.tolist(), f, sort_keys=True, indent=4, ensure_ascii=False)
+f.close()
+
+
+with open('p3_range_transform.json', 'wb') as outfile:
+    json.dump({'range':scale.scale_.tolist(), 'min':scale.min_.tolist()},
+              outfile, sort_keys=True, indent=4, ensure_ascii=False)
+with open('p3_ICA_transform.json', 'wb') as outfile:
+    json.dump({'mix':pre.pca.mixing_.tolist(), 'unmix':pre.pca.components_.tolist(), 'mean':pre.pca.mean_.tolist()},
+              outfile, sort_keys=True, indent=4, ensure_ascii=False)
+
+np.savetxt('mix_scaled_pWorse_init.txt', X[:2])  # first two plays for later init.
+
+bounds = np.array(31*[[-1., 1.]])
+
+soln = CovarianceEstimate(X, y, bounds=bounds)
 # sig_test = np.zeros(31)
 # sig_test[-1] = 2.6
 # soln.model.f_path(sig_test)
@@ -46,8 +68,8 @@ print obj, sigma
 # # store sigma for simulation
 # # TODO: need to specify file name based on settings, e.g., optimization algorithm and input data source (best player?)
 
-file_address = 'p2_slsqp_sigma.json'
-with open(file_address, 'w') as f:
+file_address = 'p3_bfgs_sigma_alpha'+str(soln.alpha)+'.json'
+with open(file_address, 'wb') as f:
     # pickle.dump([obj_set, sigma_set], f)
     json.dump([obj, sigma.tolist()], f, sort_keys=True, indent=4, ensure_ascii=False)
 f.close()
@@ -62,10 +84,10 @@ f.close()
 # f.close()
 
 
-with open('p3_range_transform.json', 'w') as outfile:
+with open('p3_range_transform.json', 'wb') as outfile:
     json.dump({'range':scale.scale_.tolist(), 'min':scale.min_.tolist()},
               outfile, sort_keys = True, indent = 4, ensure_ascii=False)
-with open('p3_ICA_transform.json', 'w') as outfile:
+with open('p3_ICA_transform.json', 'wb') as outfile:
     json.dump({'mix':pre.pca.mixing_.tolist(), 'unmix':pre.pca.components_.tolist(), 'mean':pre.pca.mean_.tolist()},
               outfile, sort_keys = True, indent = 4, ensure_ascii=False)
 

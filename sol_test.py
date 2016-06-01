@@ -39,7 +39,7 @@ print obj, sigma
 # # store sigma for simulation
 # # TODO: need to specify file name based on settings, e.g., optimization algorithm and input data source (best player?)
 
-file_address = 'p2_slsqp_sigma.json'
+file_address = 'p3_slsqp_sigma_oldICA.json'
 with open(file_address, 'w') as f:
     # pickle.dump([obj_set, sigma_set], f)
     json.dump([obj, sigma.tolist()], f, sort_keys=True, indent=4, ensure_ascii=False)

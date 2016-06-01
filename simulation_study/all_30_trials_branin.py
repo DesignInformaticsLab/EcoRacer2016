@@ -19,7 +19,7 @@ print solution[0,0,1].shape
 
 # DO NOT RUN UNLESS YOU HAVE A LONG TIME TO WAIT!
 
-
+NUM_SAMPLES = 25
 from estimate_sigma import CovarianceEstimate
 
 sigs = ['0.01', '0.1', '1.0', '10.0']
@@ -38,7 +38,7 @@ for no, label in enumerate(sigs):
         solution_X = solution[trial, no, 0] # test sigma = 0.01
         solution_y = solution[trial, no, 1]
 
-        ce = CovarianceEstimate(solution_X, solution_y, bounds, num_ini_guess)
+        ce = CovarianceEstimate(solution_X[:NUM_SAMPLES], solution_y[:NUM_SAMPLES], bounds, num_ini_guess)
         sig_scale = np.array([0.01, 0.1, 1., 10.])
         alpha_set = np.array([0.01, 0.1, 1., 10.])
         # alpha_set = np.array([1e-5, 1e-4, 1e-3, 1e-2])
@@ -49,13 +49,13 @@ for no, label in enumerate(sigs):
         #         print j
                 grid_result[i,j] = ce.model.obj(sig_inv, alpha)
         trials[trial, :, :] = grid_result[:]
-        time.sleep(10)
+        # time.sleep(10)
 
 
     data = np.copy(trials)
 
     # Write the array to disk
-    with file('all_'+label+'_trials_branin.txt', 'w') as outfile:
+    with file('all_'+label+'_trials_branin_{:d}iter.txt'.format(NUM_SAMPLES), 'w') as outfile:
         # I'm writing a header here just for the sake of readability
         # Any line starting with "#" will be ignored by numpy.loadtxt
         outfile.write('# ' +label+'sig - Array shape (trial/sig/alpha): {0}\n'.format(data.shape))

@@ -28,7 +28,7 @@ obj = lambda x, y: x**2 + y**2
 
 
 sig_scale = np.array([1.])
-max_iter = 100
+max_iter = 50
 
 num_ini_guess = 10
 # bounds = np.array([[-5, 10], [0, 15]]) #  for branin
@@ -36,7 +36,7 @@ bounds = np.array([[-3, 3], [-3, 3]])  # for sixmin
 # bounds = np.array([[-5, 5], [-5, 5], [-5, 5],
 #                    [-5, 5], [-5, 5], [-5, 5]])  # for rosenbrock-6dim
 repeat = 30
-extreme = 100.
+extreme = 1.
 file_address = './solution_obj_name_' + obj_name + '_maxiter_' + str(max_iter) + \
                '_repeat_' + str(repeat) + 'x'+str(extreme) + '.pkl'
 
