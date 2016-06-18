@@ -80,11 +80,11 @@ def max_likelihood_estimate(samples, guesses):
 
 
 if __name__ == '__main__':
-    """Call as script: <python ./all_30_trials_branin.py samples guesses>"""
+    """Call as script: <python ./all_30_trials_branin.py no_observations>"""
     import sys
 
     print(sys.argv)
     samples = int(sys.argv[1])
-    guesses = int(sys.argv[2])
+    guesses = int(sys.argv[1])
     for guess in trange(1, guesses, desc='No. init samples loop'):
         max_likelihood_estimate(samples, guess)
