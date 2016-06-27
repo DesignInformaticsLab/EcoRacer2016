@@ -49,7 +49,7 @@ df = pd.DataFrame()
 
 for lam_no in trange(4, desc='true lambda loop'):
     all_df = pd.DataFrame()  # dataframe for this specific true lambda
-    for no_iters in trange(5, 21, desc='observation no loop'):
+    for no_iters in trange(5, 26, desc='observation no loop'):
         mins_df = pd.DataFrame(index=np.arange(30), columns=names)
 #         no_iters = 20
         true_lam = lam_no
@@ -59,7 +59,7 @@ for lam_no in trange(4, desc='true lambda loop'):
         solution_X = np.dstack([i[true_lam][0][:no_iters,:].T for i in dat['solution']])
         solution_y = np.dstack([i[true_lam][1][:no_iters] for i in dat['solution']])
 
-        E_true = np.array([[pdist(solution_X[:,:i,j].T).min() for i in range(2,20)] for j in range(30)])
+        E_true = np.array([[pdist(solution_X[:,:i,j].T).min() for i in range(2,25)] for j in range(30)])
 
         bounds = np.array([[-5, 10], [0, 15]])  # for branin
         t_samp = range(2,no_iters)
