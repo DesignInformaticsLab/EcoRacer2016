@@ -34,7 +34,7 @@ def get_Ls(lam, iters):
     for n,i in enumerate(inits):
         fname='./branin_ML/sample_study/all{}branin_{}iter_{:d}init.txt'.format(lam,iters,i)
         data = np.loadtxt(fname).reshape((30,4,4))
-        Ls[n] = -data.mean(axis=0).min(axis=0)
+        Ls[n] = -data.mean(axis=0).min(axis=1)
     return Ls
 
 
