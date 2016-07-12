@@ -45,6 +45,7 @@ class EGO():
         self.X = self.X*(self.bounds[:, 1]-self.bounds[:, 0])+self.bounds[:, 0]
         # self.y = self.obj(self.X[:, 0], self.X[:, 1])
         self.y = self.obj(*self.X.T)
+
     def fit(self):
         self.R = self.R_ij(self.X)
         if np.linalg.matrix_rank(self.R) < self.R.shape[1]:
@@ -108,6 +109,22 @@ class EGO():
         # WARNING: this is getting runtime warnings (invalid value encountered in multiply/sqrt)
         return np.sqrt(mse)*sig
 
+    def concentrated_likelihood(self, proposed_SIs):
+        ls = np.zeros(proposed_SIs.shape[0])  # the likelihood array
+        # old_sig = self.SI.copy()
+
+        for i, prop in enumerate(proposed_SIs):
+            self.SI = np.diag(prop)
+            self.fit()
+
+            dim = np.size(self.y)
+            sig = np.sqrt((self.y - self.b).T.dot(self.RI.dot(self.y - self.b)) / dim)
+
+            den = (2.*np.pi)**(dim/2.)*(sig**2)**(dim/2.)*np.linalg.det(self.R)**0.5
+            ls[i] = np.exp(-dim/2.)/den  # eq. 4 Jones '98
+
+        self.SI = np.diag(proposed_SIs[np.argmax(ls)])  # lambda with highest likelihood
+
     def f(self, x): # Expected improvement function
         if x.size == self.X.shape[1]:
             x = np.array(x, ndmin=2) #ensure is 2D
@@ -133,6 +150,11 @@ class EGO():
         self.opt_ini_guess = self.opt_ini_guess*(self.bounds[:, 1]-self.bounds[:, 0])+self.bounds[:, 0]
         p = self.opt_ini_guess.shape[1] # problem size
         n = self.opt_ini_guess.shape[0] # number of optimization runs
+        test_lambdas = np.array([int(self.p)*[0.01],
+                                 int(self.p)*[0.1],
+                                 int(self.p)*[1.0],
+                                 int(self.p)*[10.0]])
+        self.concentrated_likelihood(test_lambdas)
         self.fit()
         func = lambda x: - self.f(x)
         result_x = np.zeros((n, p))
