@@ -39,14 +39,16 @@ obj_names = [obj_name1]
 objs = [obj1]
 # boundss = [bounds1, bounds2, bounds3]
 boundss = [bounds1]
-sig_scale = np.array([0.01, 0.1, 1.0, 10.])
+# sig_scale = np.array([0.01, 0.1, 1.0, 10.])
+sig_scale = np.array([10.])
+
 max_iter = 100
 
 num_ini_guess = 10
 repeat = 30
 for n, k in enumerate(obj_names):
 
-    file_address = './OPT_solution_obj_name_' + obj_names[n] + '_maxiter_' + str(max_iter)\
+    file_address = './OPT10_solution_obj_name_' + obj_names[n] + '_maxiter_' + str(max_iter)\
                    + '_repeat_' + str(repeat) + '.pkl'
 
 
