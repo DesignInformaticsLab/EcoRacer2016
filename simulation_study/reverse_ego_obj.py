@@ -12,7 +12,7 @@ class Kriging():
     This is the actual optimization class, that will interface with the higher level regression.
     """
     #def __init__(self, sig, X, y):
-    def __init__(self, sig_inv, bounds, num_ini_guess):
+    def __init__(self, sig_inv, bounds, num_ini_guess, sample):
         #self.X = X
         #self.y = y
 
@@ -28,7 +28,8 @@ class Kriging():
         self.num_ini_guess = num_ini_guess
         # setup random samples to calculate mean of expected improvement
         # self.samples = lhs(2, 100)  # for 2-dim funcs
-        self.samples = lhs(self.bounds.shape[0], 100)  # for 6-dim rosenbrock
+        # self.samples = lhs(self.bounds.shape[0], 100)  # for 6-dim rosenbrock
+        self.samples = sample
         self.samples = self.samples*(self.bounds[:, 1]-self.bounds[:, 0])+self.bounds[:, 0]
 
 
@@ -122,12 +123,12 @@ class Kriging():
 
         #self.Sigma = sig  # replace stored sigma with supplied
         self.SI = np.diag(sig_inv)
-        path = np.zeros(self.n)
+        path = np.zeros(self.X.shape[0]-self.num_ini_guess)
         # print self.n, path.shape
         self.fit(old_X[:self.num_ini_guess],old_y[:self.num_ini_guess])  # first observation
         for i, x in enumerate(old_X[self.num_ini_guess:], self.num_ini_guess):
 
-            path[i-1] = self.f(x)
+            path[i-self.num_ini_guess] = self.f(x)
             self.fit(old_X[:i+1], old_y[:i+1])
 
         # return original database to storage
@@ -148,12 +149,12 @@ class Kriging():
         self.SI = np.diag(sig_inv)
 
         sample_size = samples.shape[0]
-        sampled_path = np.zeros((self.n, sample_size))
+        sampled_path = np.zeros((self.X.shape[0]-self.num_ini_guess, sample_size))
         # print self.n, path.shape
         self.fit(old_X[:self.num_ini_guess],old_y[:self.num_ini_guess])  # first observation
         for i, x in enumerate(old_X[self.num_ini_guess:], self.num_ini_guess):
             for j, xx in enumerate(samples):
-                sampled_path[i-1,j] = self.f(xx)
+                sampled_path[i-self.num_ini_guess,j] = self.f(xx)
             self.fit(old_X[:i+1], old_y[:i+1])
 
         # return original database to storage
@@ -172,7 +173,7 @@ class Kriging():
         self.recent_path = log_prob
         sum_improv = np.sum(log_prob)
 
-        return sum_improv
+        return log_prob
 
         # # save whole database as a copy
         # old_X = self.X[:]

@@ -9,6 +9,7 @@ method_string = ['original_learned_sigma_from_all_plays_from_all_player2_0321201
                  'original_learned_sigma_from_11_plays_from_11_player2_03252016_)', # 11 plays, 11 sigma
                  'original_unit_sigma_from_11_player2_03252016_', # 11 plays, unit sigma
                  'original_unit_sigma_from_5_player2_03252016_', # 5 plays, unit sigma
+                 'original_unit_sigma_from_31_player2_03252016_'
                 ]
 iter = 20
 

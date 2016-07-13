@@ -22,23 +22,39 @@ def obj3(x1, x2, x3, x4, x5, x6):
     """The Rosenbrock function"""
     return sum(100.0*(x[1:]-x[:-1]**2.0)**2.0 + (1-x[:-1])**2.0)  # from scipy.optimize
 
+obj_name4 = 'rosenbrock-30dim'
+def obj4(x1, x2, x3, x4, x5, x6, x7, x8, x9, x10,
+         x11, x12, x13, x14, x15, x16, x17, x18, x19, x20,
+         x21, x22, x23, x24, x25, x26, x27, x28, x29, x30):
+    x = np.array([x1, x2, x3, x4, x5, x6, x7, x8, x9, x10,
+         x11, x12, x13, x14, x15, x16, x17, x18, x19, x20,
+         x21, x22, x23, x24, x25, x26, x27, x28, x29, x30])
+    """The Rosenbrock function"""
+    return sum(100.0*(x[1:]-x[:-1]**2.0)**2.0 + (1-x[:-1])**2.0)  # from scipy.optimize
+
 bounds1 = np.array([[-5, 10], [0, 15]]) #  for branin
 bounds2 = np.array([[-3, 3], [-3, 3]])  # for sixmin
 bounds3 = np.array([[-2, 2], [-2, 2], [-2, 2],
                    [-2, 2], [-2, 2], [-2, 2]])  # for rosenbrock-6dim
+bounds4 = np.array([[-2, 2], [-2, 2], [-2, 2], [-2, 2], [-2, 2], [-2, 2],
+                    [-2, 2], [-2, 2], [-2, 2], [-2, 2], [-2, 2], [-2, 2],
+                    [-2, 2], [-2, 2], [-2, 2], [-2, 2], [-2, 2], [-2, 2],
+                    [-2, 2], [-2, 2], [-2, 2], [-2, 2], [-2, 2], [-2, 2],
+                    [-2, 2], [-2, 2], [-2, 2], [-2, 2], [-2, 2], [-2, 2]])  # for rosenbrock-30dim
 
 fopt1 = 0.397887
 fopt2 = -1.0316
 fopt3 = 0
+fopt4 = 0
 # fopt = [fopt1, fopt2, fopt3]
-fopt = [fopt2]
+fopt = [fopt4]
 
 # obj_names = [obj_name1, obj_name2, obj_name3]
-obj_names = [obj_name1]
+obj_names = [obj_name4]
 # objs = [obj1, obj2, obj3]
-objs = [obj1]
+objs = [obj4]
 # boundss = [bounds1, bounds2, bounds3]
-boundss = [bounds1]
+boundss = [bounds4]
 sig_scale = np.array([0.01, 0.1, 1.0, 10.])
 max_iter = 100
 
@@ -46,7 +62,7 @@ num_ini_guess = 10
 repeat = 30
 for n, k in enumerate(obj_names):
 
-    file_address = './OPT_solution_obj_name_' + obj_names[n] + '_maxiter_' + str(max_iter)\
+    file_address = './solution_obj_name_' + obj_names[n] + '_maxiter_' + str(max_iter)\
                    + '_repeat_' + str(repeat) + '.pkl'
 
 
