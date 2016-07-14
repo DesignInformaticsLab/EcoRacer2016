@@ -62,7 +62,7 @@ num_ini_guess = 10
 repeat = 30
 for n, k in enumerate(obj_names):
 
-    file_address = './OPT_solution_obj_name_' + obj_names[n] + '_maxiter_' + str(max_iter)\
+    file_address = './solution_obj_name_' + obj_names[n] + '_maxiter_' + str(max_iter)\
                    + '_repeat_' + str(repeat) + '.pkl'
 
 
