@@ -31,14 +31,17 @@ class EGO():
             if new_x.shape[1] < 2:
                 break
             new_y = self.obj(*new_x[0, :])
+            print new_y
             self.X = np.vstack((self.X, new_x))
             self.y = np.hstack((self.y, new_y))
         return [self.X, self.y]
 
     def terminate(self):
         if self.X.shape[0] < self.max_iter:
+            print "NOW FINDING SAMPLE ", self.X.shape[0]
             return False
-        return True
+        else:
+            return True
 
     def initial_sample(self):
         self.X = lhs(self.p, self.num_ini_guess)
@@ -121,9 +124,11 @@ class EGO():
             sig = np.sqrt((self.y - self.b).T.dot(self.RI.dot(self.y - self.b)) / dim)
 
             den = (2.*np.pi)**(dim/2.)*(sig**2)**(dim/2.)*np.linalg.det(self.R)**0.5
-            ls[i] = np.exp(-dim/2.)/den  # eq. 4 Jones '98
+            ls[i] = np.log(den)+dim/2.
+            # ls[i] = np.exp(-dim/2.)/den  # eq. 4 Jones '98
 
-        self.SI = np.diag(proposed_SIs[np.argmax(ls)])  # lambda with highest likelihood
+        # self.SI = np.diag(proposed_SIs[np.argmax(ls)])  # lambda with highest likelihood
+        self.SI = np.diag(proposed_SIs[np.argmin(ls)])  # lambda with highest likelihood
 
     def f(self, x): # Expected improvement function
         if x.size == self.X.shape[1]:
@@ -161,7 +166,7 @@ class EGO():
         result_f = np.zeros((n, 1))
         for i, x0 in enumerate(self.opt_ini_guess):
             res = opt.minimize(func, x0=x0, bounds=self.bounds, method='slsqp', tol=1e-5,
-                                   options={'eps': 1e-8, 'iprint': 2, 'disp': True, 'maxiter': 100})
+                                   options={'eps': 1e-8, 'iprint': 2, 'disp': False, 'maxiter': 100})
             result_f[i] = res.fun
             result_x[i] = res.x
             if np.any(np.isnan(res.x)==True):
