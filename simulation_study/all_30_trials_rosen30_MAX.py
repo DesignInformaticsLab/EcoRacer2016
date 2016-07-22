@@ -23,14 +23,14 @@ solution = np.array(dat['solution'])
 print solution.shape
 print solution[0,0,1].shape
 
-num_trial = 30
+num_trial = 1
 
 np.random.seed(0)
-sample = np.random.uniform(size=(100,30))
+sample = np.random.uniform(size=(10000,30))
 
 # DO NOT RUN UNLESS YOU HAVE A LONG TIME TO WAIT!
 def max_likelihood_estimate(samples):
-    sigs = ['0.1','1.0','10.0']
+    sigs = ['0.01']
     sig_scale = np.array([0.01, 0.1, 1., 10.])
     alpha_set = np.array([0.01, 0.1, 1., 10.])
     NUM_SAMPLES = samples
@@ -59,14 +59,14 @@ def max_likelihood_estimate(samples):
                         temp = np.hstack((temp,[np.nan]*(NUM_SAMPLES-num_ini_guess-temp.shape[0])))
                     grid_result[i,j,:,trial] = temp
 
-        for guess in range(20,NUM_SAMPLES):
+        for guess in range(num_ini_guess,NUM_SAMPLES):
             trials = np.zeros((num_trial,4,4))
             for trial in range(num_trial):
                 trials[trial, :, :] = grid_result[:,:,guess-num_ini_guess,trial]
 
             data = np.copy(trials)
             # Write the array to disk
-            path = os.path.expanduser('rosen30_ML/all'+label+'rosen30_{:d}iter_{:d}init.txt'.format(NUM_SAMPLES, guess))
+            path = os.path.expanduser('rosen30_ML_10000sample/all'+label+'rosen30_{:d}iter_{:d}init.txt'.format(NUM_SAMPLES, guess))
             with file(path, 'w') as outfile:
                 # I'm writing a header here just for the sake of readability
                 # Any line starting with "#" will be ignored by numpy.loadtxt
@@ -85,7 +85,7 @@ def max_likelihood_estimate(samples):
                     outfile.write('# New trial\n')
                 # time.sleep(10)
 
-samples = 50
+samples = 15
 # guesses = 24
 # for guess in trange(11, guesses, desc='No. init samples loop'):
 max_likelihood_estimate(samples)
