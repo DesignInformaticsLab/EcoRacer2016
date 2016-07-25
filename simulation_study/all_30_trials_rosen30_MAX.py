@@ -23,14 +23,14 @@ solution = np.array(dat['solution'])
 print solution.shape
 print solution[0,0,1].shape
 
-num_trial = 1
+num_trial = 30
 
 np.random.seed(0)
 sample = np.random.uniform(size=(10000,30))
 
 # DO NOT RUN UNLESS YOU HAVE A LONG TIME TO WAIT!
 def max_likelihood_estimate(samples):
-    sigs = ['0.01']
+    sigs = ['0.01','0.1','1.0','10.0']
     sig_scale = np.array([0.01, 0.1, 1., 10.])
     alpha_set = np.array([0.01, 0.1, 1., 10.])
     NUM_SAMPLES = samples
@@ -85,7 +85,7 @@ def max_likelihood_estimate(samples):
                     outfile.write('# New trial\n')
                 # time.sleep(10)
 
-samples = 15
+samples = 50
 # guesses = 24
 # for guess in trange(11, guesses, desc='No. init samples loop'):
 max_likelihood_estimate(samples)
