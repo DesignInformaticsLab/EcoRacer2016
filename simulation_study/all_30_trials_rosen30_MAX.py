@@ -23,10 +23,14 @@ solution = np.array(dat['solution'])
 print solution.shape
 print solution[0,0,1].shape
 
-num_trial = 30
+num_trial = 1
 
-np.random.seed(0)
-sample = np.random.uniform(size=(10000,30))
+method = 'mcmc'
+single = False
+sample_size = 1000
+
+# np.random.seed(0)
+# sample = np.random.uniform(size=(10000,30))
 
 # DO NOT RUN UNLESS YOU HAVE A LONG TIME TO WAIT!
 def max_likelihood_estimate(samples):
@@ -41,7 +45,6 @@ def max_likelihood_estimate(samples):
                         [-2, 2], [-2, 2], [-2, 2], [-2, 2], [-2, 2], [-2, 2],
                         [-2, 2], [-2, 2], [-2, 2], [-2, 2], [-2, 2], [-2, 2]])  # for rosenbrock-30dim
 
-
     for no, label in enumerate(sigs):
         grid_result = np.zeros((sig_scale.shape[0], alpha_set.shape[0], NUM_SAMPLES-num_ini_guess,num_trial))
 
@@ -49,12 +52,12 @@ def max_likelihood_estimate(samples):
             solution_X = solution[trial, no, 0]
             solution_y = solution[trial, no, 1]
 
-            ce = CovarianceEstimate(solution_X[:NUM_SAMPLES], solution_y[:NUM_SAMPLES], bounds, num_ini_guess, sample)
+            ce = CovarianceEstimate(solution_X[:NUM_SAMPLES], solution_y[:NUM_SAMPLES], bounds, num_ini_guess)
 
             for i, s in enumerate(sig_scale):
                 sig_inv = np.ones(bounds.shape[0])*s
                 for j, alpha in enumerate(alpha_set):
-                    temp = ce.model.obj(sig_inv, alpha)
+                    temp = ce.model.obj(sig_inv, alpha, method, single, sample_size)
                     if temp.shape[0]<NUM_SAMPLES-num_ini_guess:
                         temp = np.hstack((temp,[np.nan]*(NUM_SAMPLES-num_ini_guess-temp.shape[0])))
                     grid_result[i,j,:,trial] = temp
@@ -66,7 +69,7 @@ def max_likelihood_estimate(samples):
 
             data = np.copy(trials)
             # Write the array to disk
-            path = os.path.expanduser('rosen30_ML_10000sample/all'+label+'rosen30_{:d}iter_{:d}init.txt'.format(NUM_SAMPLES, guess))
+            path = os.path.expanduser('rosen30_ML_{:d}sample_mcmc/all'.format(sample_size)+label+'rosen30_{:d}init.txt'.format(guess))
             with file(path, 'w') as outfile:
                 # I'm writing a header here just for the sake of readability
                 # Any line starting with "#" will be ignored by numpy.loadtxt
@@ -85,7 +88,7 @@ def max_likelihood_estimate(samples):
                     outfile.write('# New trial\n')
                 # time.sleep(10)
 
-samples = 50
+samples = 30
 # guesses = 24
 # for guess in trange(11, guesses, desc='No. init samples loop'):
 max_likelihood_estimate(samples)

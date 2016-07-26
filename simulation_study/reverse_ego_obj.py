@@ -5,6 +5,7 @@ from scipy.spatial.distance import pdist, cdist, squareform
 from scipy.linalg import pinv2, inv
 from pyDOE import lhs
 from scipy.misc import logsumexp
+import mcint
 
 class Kriging():
 
@@ -12,7 +13,7 @@ class Kriging():
     This is the actual optimization class, that will interface with the higher level regression.
     """
     #def __init__(self, sig, X, y):
-    def __init__(self, sig_inv, bounds, num_ini_guess, sample):
+    def __init__(self, sig_inv, bounds, num_ini_guess):
         #self.X = X
         #self.y = y
 
@@ -25,12 +26,13 @@ class Kriging():
         # self.model = np.array([])
 
         self.bounds = bounds
+        self.size = np.prod(self.bounds[:, 1]-self.bounds[:, 0])# domain size
         self.num_ini_guess = num_ini_guess
         # setup random samples to calculate mean of expected improvement
         # self.samples = lhs(2, 100)  # for 2-dim funcs
         # self.samples = lhs(self.bounds.shape[0], 100)  # for 6-dim rosenbrock
-        self.samples = sample
-        self.samples = self.samples*(self.bounds[:, 1]-self.bounds[:, 0])+self.bounds[:, 0]
+        # self.samples = sample
+        # self.samples = self.samples*(self.bounds[:, 1]-self.bounds[:, 0])+self.bounds[:, 0]
 
 
     #def fit(self):
@@ -115,7 +117,7 @@ class Kriging():
         f_x = np.multiply(np.subtract(ymin, y_h), cdf) + np.multiply(s, pdf)
         return f_x
 
-    def f_path(self, sig_inv):
+    def f_path(self, sig_inv, single):
         # save whole database as a copy
         old_X = self.X[:]
         old_y = self.y[:]
@@ -123,13 +125,19 @@ class Kriging():
 
         #self.Sigma = sig  # replace stored sigma with supplied
         self.SI = np.diag(sig_inv)
-        path = np.zeros(self.X.shape[0]-self.num_ini_guess)
-        # print self.n, path.shape
-        self.fit(old_X[:self.num_ini_guess],old_y[:self.num_ini_guess])  # first observation
-        for i, x in enumerate(old_X[self.num_ini_guess:], self.num_ini_guess):
 
-            path[i-self.num_ini_guess] = self.f(x)
-            self.fit(old_X[:i+1], old_y[:i+1])
+        if single: # calculate single iter
+            path = np.zeros(1)
+            self.fit(old_X[:-1],old_y[:-1])
+            path[0] = self.f(old_X[-1])
+        else:
+            path = np.zeros(self.X.shape[0]-self.num_ini_guess)
+            # print self.n, path.shape
+            self.fit(old_X[:self.num_ini_guess],old_y[:self.num_ini_guess])  # first observation
+            for i, x in enumerate(old_X[self.num_ini_guess:], self.num_ini_guess):
+
+                path[i-self.num_ini_guess] = self.f(x)
+                self.fit(old_X[:i+1], old_y[:i+1])
 
         # return original database to storage
         self.X = old_X
@@ -139,7 +147,7 @@ class Kriging():
         # return np.nan_to_num(path)
         return path
 
-    def sampled_f_path(self, sig_inv, samples):
+    def sampled_f_path(self, sig_inv, samples, single):
         # save whole database as a copy
         old_X = self.X[:]
         old_y = self.y[:]
@@ -147,15 +155,21 @@ class Kriging():
 
         # self.Sigma = sig  # replace stored sigma with supplied
         self.SI = np.diag(sig_inv)
-
         sample_size = samples.shape[0]
-        sampled_path = np.zeros((self.X.shape[0]-self.num_ini_guess, sample_size))
-        # print self.n, path.shape
-        self.fit(old_X[:self.num_ini_guess],old_y[:self.num_ini_guess])  # first observation
-        for i, x in enumerate(old_X[self.num_ini_guess:], self.num_ini_guess):
+
+        if single: # calculate single iter
+            sampled_path = np.zeros((1,sample_size))
+            self.fit(old_X[:-1],old_y[:-1])
             for j, xx in enumerate(samples):
-                sampled_path[i-self.num_ini_guess,j] = self.f(xx)
-            self.fit(old_X[:i+1], old_y[:i+1])
+                sampled_path[0,j] = self.f(xx)
+        else:
+            sampled_path = np.zeros((self.X.shape[0]-self.num_ini_guess, sample_size))
+            # print self.n, path.shape
+            self.fit(old_X[:self.num_ini_guess],old_y[:self.num_ini_guess])  # first observation
+            for i, x in enumerate(old_X[self.num_ini_guess:], self.num_ini_guess):
+                for j, xx in enumerate(samples):
+                    sampled_path[i-self.num_ini_guess,j] = self.f(xx)
+                self.fit(old_X[:i+1], old_y[:i+1])
 
         # return original database to storage
         self.X = old_X
@@ -163,15 +177,22 @@ class Kriging():
         self.SI = old_sig
         return sampled_path
 
-    def obj(self, sig_inv, alpha):
-        path = self.f_path(sig_inv)
-        sampled_path = self.sampled_f_path(sig_inv, self.samples)
-        # log_prob = np.log(1./(1.+np.sum(np.exp(alpha*(sampled_path.T - path)), axis=0)))
-        # sum_improv = np.sum(self.recent_path)
+    def obj(self, sig_inv, alpha, method, single, sample_size):
 
-        log_prob = alpha*path - logsumexp(alpha*np.vstack((sampled_path.T, path)).T, axis=1)
+        path = self.f_path(sig_inv, single)
+        if method=='uniform': # this method is incorrect, use mcmc
+            self.samples = np.random.uniform(size=(sample_size,self.p))
+            self.samples = self.samples*(self.bounds[:, 1]-self.bounds[:, 0])+self.bounds[:, 0]
+            sampled_path = self.sampled_f_path(sig_inv, self.samples, single)
+            log_prob = alpha*path - logsumexp(alpha*np.vstack((sampled_path.T, path)).T, axis=1)
+            # log_prob = np.log(1./(1.+np.sum(np.exp(alpha*(sampled_path.T - path)), axis=0)))
+            # sum_improv = np.sum(self.recent_path)
+        elif method=='mcmc':
+            zz = self.mcmc_f_path(alpha, sig_inv, sample_size)
+            log_prob = alpha*path - zz
+
         self.recent_path = log_prob
-        sum_improv = np.sum(log_prob)
+        # sum_improv = np.sum(log_prob)
 
         return log_prob
 
@@ -200,4 +221,91 @@ class Kriging():
         # #     self.fit(data_now[0],data_now[1])
         # #     F += self.f(x)
         # # return F
+    def mcmc_f_path(self, alpha, sig_inv, sample_size):
+        def integrand(x):
+            return np.min((np.exp(alpha*self.f(x)), 1e0))
 
+        def sampler():
+            while True:
+                x = np.random.uniform(size=(1,self.p))
+                x = x*(self.bounds[:, 1]-self.bounds[:, 0])+self.bounds[:, 0]
+                yield (x)
+        domainsize = self.size
+        nmc = sample_size
+        self.SI = np.diag(sig_inv)
+
+        # save whole database as a copy
+        old_X = self.X[:]
+        old_y = self.y[:]
+        old_sig = self.SI[:]
+
+        sampled_path = np.zeros(self.X.shape[0]-self.num_ini_guess)
+        # print self.n, path.shape
+        self.fit(old_X[:self.num_ini_guess],old_y[:self.num_ini_guess])  # first observation
+        for i, x in enumerate(old_X[self.num_ini_guess:], self.num_ini_guess):
+            # result, error = mcint.integrate(integrand, sampler(), measure=domainsize, n=nmc)
+            result = self.metropolishastings(x, sample_size)
+            sampled_path[i-self.num_ini_guess] = result
+            self.fit(old_X[:i+1], old_y[:i+1])
+
+        # return original database to storage
+        self.X = old_X
+        self.y = old_y
+        self.SI = old_sig
+        return sampled_path
+
+    def z(self, x, sig_inv):
+        old_X = self.X[:]
+        old_y = self.y[:]
+        old_sig = self.SI[:]
+
+        # self.Sigma = sig  # replace stored sigma with supplied
+        self.SI = np.diag(sig_inv)
+
+        self.fit(old_X[:-1],old_y[:-1])
+        temp = self.f(x)
+
+        # return original database to storage
+        self.X = old_X
+        self.y = old_y
+        self.SI = old_sig
+        return temp
+
+    def metropolishastings(self, guess, sample_size):
+        # Prepare storing MCMC chain as array of arrays.
+        A = [guess]
+        U = [self.f(guess)]
+        # define stepsize of MCMC.
+        stepsizes = [0.5]*self.p  # array of stepsizes
+        accepted  = 0.0
+
+        # Metropolis-Hastings with 10,000 iterations.
+        for n in range(sample_size):
+            old_x  = A[len(A)-1]  # old parameter value as array
+            old_f = self.f(old_x)
+            # Suggest new candidate from Gaussian proposal distribution.
+            new_x = np.zeros(self.p)
+            for i in range(self.p):
+                # Use stepsize provided for every dimension.
+                new_x[i] = np.random.normal(old_x[i], stepsizes[i])
+            new_f = self.f(new_x)
+            # Accept new candidate in Monte-Carlo fashing.
+            if (new_f > old_f):
+                A.append(new_x)
+                U.append(new_f)
+                accepted = accepted + 1.0  # monitor acceptance
+            else:
+                u = np.random.uniform(0.0,1.0)
+                if (u < new_f/old_f):
+                    A.append(new_x)
+                    U.append(new_f)
+                    accepted = accepted + 1.0  # monitor acceptance
+                else:
+                    A.append(old_x)
+                    U.append(old_f)
+        # Discard first half of MCMC chain and thin out the rest.
+        Clean = []
+        for n in range(sample_size/2,sample_size):
+            if (n % 10 == 0):
+                Clean.append(U[n][0])
+        return logsumexp(Clean)-np.log(len(Clean))
