@@ -184,7 +184,7 @@ class Kriging():
             self.samples = np.random.uniform(size=(sample_size,self.p))
             self.samples = self.samples*(self.bounds[:, 1]-self.bounds[:, 0])+self.bounds[:, 0]
             sampled_path = self.sampled_f_path(sig_inv, self.samples, single)
-            log_prob = alpha*path - logsumexp(alpha*np.vstack((sampled_path.T, path)).T, axis=1)
+            log_prob = alpha*path - logsumexp(alpha*np.vstack((sampled_path.T, path)).T, axis=1) + np.log(sample_size)
             # log_prob = np.log(1./(1.+np.sum(np.exp(alpha*(sampled_path.T - path)), axis=0)))
             # sum_improv = np.sum(self.recent_path)
         elif method=='mcmc':
@@ -244,7 +244,8 @@ class Kriging():
         self.fit(old_X[:self.num_ini_guess],old_y[:self.num_ini_guess])  # first observation
         for i, x in enumerate(old_X[self.num_ini_guess:], self.num_ini_guess):
             # result, error = mcint.integrate(integrand, sampler(), measure=domainsize, n=nmc)
-            result = self.metropolishastings(x, sample_size)
+            result = self.importancesampling(x,sample_size,alpha)
+            # result = self.metropolishastings(x, sample_size, alpha)
             sampled_path[i-self.num_ini_guess] = result
             self.fit(old_X[:i+1], old_y[:i+1])
 
@@ -271,12 +272,24 @@ class Kriging():
         self.SI = old_sig
         return temp
 
-    def metropolishastings(self, guess, sample_size):
+    def importancesampling(self, guess, sample_size, alpha):
+        # use importance sampling with a normal distribution
+        scale = 0.05
+        # A = [self.f(guess)*alpha/domainsize/np.exp(0.)*np.sqrt(2*np.pi)*scale]
+        A = [self.f(guess)*alpha]
+        self.samples = np.random.normal(guess, scale, size=(sample_size,self.p))
+        # self.samples = np.min(np.max((self.samples, self.bounds[:,0]),),self.bounds[i,1])
+        for x in self.samples:
+            # A.append(self.f(x)*alpha/domainsize/np.exp(np.linalg.norm(x-guess)**2/(scale**2))*np.sqrt(2*np.pi)*scale)
+            A.append(self.f(x)*alpha-np.linalg.norm(x-guess)**2/2./(scale**2))
+        return logsumexp(A) + np.log(np.sqrt(2*np.pi)*scale) - np.log(sample_size)
+
+    def metropolishastings(self, guess, sample_size, alpha):
         # Prepare storing MCMC chain as array of arrays.
         A = [guess]
-        U = [self.f(guess)]
+        U = [1.]
         # define stepsize of MCMC.
-        stepsizes = [0.5]*self.p  # array of stepsizes
+        stepsizes = [0.005]*self.p  # array of stepsizes
         accepted  = 0.0
 
         # Metropolis-Hastings with 10,000 iterations.
@@ -287,25 +300,25 @@ class Kriging():
             new_x = np.zeros(self.p)
             for i in range(self.p):
                 # Use stepsize provided for every dimension.
-                new_x[i] = np.random.normal(old_x[i], stepsizes[i])
+                new_x[i] = min(max(np.random.normal(old_x[i], stepsizes[i]), self.bounds[i,0]),self.bounds[i,1])
             new_f = self.f(new_x)
             # Accept new candidate in Monte-Carlo fashing.
             if (new_f > old_f):
                 A.append(new_x)
-                U.append(new_f)
+                U.append(1.)
                 accepted = accepted + 1.0  # monitor acceptance
             else:
                 u = np.random.uniform(0.0,1.0)
-                if (u < new_f/old_f):
+                if (u < np.exp(alpha*(new_f-old_f))):
                     A.append(new_x)
-                    U.append(new_f)
+                    U.append(1.)
                     accepted = accepted + 1.0  # monitor acceptance
                 else:
                     A.append(old_x)
-                    U.append(old_f)
+                    U.append(1.)
         # Discard first half of MCMC chain and thin out the rest.
         Clean = []
         for n in range(sample_size/2,sample_size):
             if (n % 10 == 0):
                 Clean.append(U[n][0])
-        return logsumexp(Clean)-np.log(len(Clean))
+        return logsumexp(np.array(Clean)*alpha)-np.log(len(Clean))

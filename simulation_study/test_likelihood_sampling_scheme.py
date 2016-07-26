@@ -18,12 +18,12 @@ solution = np.array(dat['solution'])
 num_trial = 30
 
 # np.random.seed(0)
-sample_size = 1000
+sample_size = 10000
 
-sig_guess = 0.1
-alpha = 1.0
+sig_guess = 10.0
+alpha = 10.0
 
-num_ini_guess = 10
+num_ini_guess = 16
 
 # bounds = np.array([[-5, 10], [0, 15]]) #  for branin
 bounds = np.array([[-2, 2], [-2, 2], [-2, 2], [-2, 2], [-2, 2], [-2, 2],
@@ -32,7 +32,7 @@ bounds = np.array([[-2, 2], [-2, 2], [-2, 2], [-2, 2], [-2, 2], [-2, 2],
                     [-2, 2], [-2, 2], [-2, 2], [-2, 2], [-2, 2], [-2, 2],
                     [-2, 2], [-2, 2], [-2, 2], [-2, 2], [-2, 2], [-2, 2]])  # for rosenbrock-30dim
 
-NUM_SAMPLES = 20
+NUM_SAMPLES = 17
 method = 'mcmc'
 single = False
 
