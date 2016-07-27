@@ -5,7 +5,7 @@ from scipy.spatial.distance import pdist, cdist, squareform
 from scipy.linalg import pinv2, inv
 from pyDOE import lhs
 from scipy.misc import logsumexp
-import mcint
+# import mcint
 
 class Kriging():
 

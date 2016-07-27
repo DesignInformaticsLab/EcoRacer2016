@@ -46,6 +46,7 @@ def max_likelihood_estimate(samples):
                         [-2, 2], [-2, 2], [-2, 2], [-2, 2], [-2, 2], [-2, 2]])  # for rosenbrock-30dim
 
     for no, label in enumerate(sigs):
+        print('################### true lambda = {:s} ########################'.format(label))
         grid_result = np.zeros((sig_scale.shape[0], alpha_set.shape[0], NUM_SAMPLES-num_ini_guess,num_trial))
 
         for trial in range(num_trial):
@@ -55,6 +56,7 @@ def max_likelihood_estimate(samples):
             ce = CovarianceEstimate(solution_X[:NUM_SAMPLES], solution_y[:NUM_SAMPLES], bounds, num_ini_guess)
 
             for i, s in enumerate(sig_scale):
+                print('{:s}|{:f}'.format(label,s))
                 sig_inv = np.ones(bounds.shape[0])*s
                 for j, alpha in enumerate(alpha_set):
                     temp = ce.model.obj(sig_inv, alpha, method, single, sample_size)
