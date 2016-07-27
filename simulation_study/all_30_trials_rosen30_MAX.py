@@ -27,7 +27,7 @@ num_trial = 1
 
 method = 'mcmc'
 single = False
-sample_size = 1000
+sample_size = 10000
 
 # np.random.seed(0)
 # sample = np.random.uniform(size=(10000,30))
@@ -88,7 +88,5 @@ def max_likelihood_estimate(samples):
                     outfile.write('# New trial\n')
                 # time.sleep(10)
 
-samples = 30
-# guesses = 24
-# for guess in trange(11, guesses, desc='No. init samples loop'):
+samples = 20
 max_likelihood_estimate(samples)

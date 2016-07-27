@@ -26,7 +26,7 @@ class Kriging():
         # self.model = np.array([])
 
         self.bounds = bounds
-        self.size = np.prod(self.bounds[:, 1]-self.bounds[:, 0])# domain size
+        self.size = np.prod(self.bounds[:, 1]-self.bounds[:, 0]+0.0)# domain size
         self.num_ini_guess = num_ini_guess
         # setup random samples to calculate mean of expected improvement
         # self.samples = lhs(2, 100)  # for 2-dim funcs
@@ -244,7 +244,7 @@ class Kriging():
         self.fit(old_X[:self.num_ini_guess],old_y[:self.num_ini_guess])  # first observation
         for i, x in enumerate(old_X[self.num_ini_guess:], self.num_ini_guess):
             # result, error = mcint.integrate(integrand, sampler(), measure=domainsize, n=nmc)
-            result = self.importancesampling(x,sample_size,alpha)
+            result = self.importancesampling(x,sample_size,alpha,domainsize)
             # result = self.metropolishastings(x, sample_size, alpha)
             sampled_path[i-self.num_ini_guess] = result
             self.fit(old_X[:i+1], old_y[:i+1])
@@ -272,17 +272,28 @@ class Kriging():
         self.SI = old_sig
         return temp
 
-    def importancesampling(self, guess, sample_size, alpha):
+    def importancesampling(self, guess, sample_size, alpha, domainsize):
         # use importance sampling with a normal distribution
-        scale = 0.05
+        # use two scales of normal for local and global
+
+        scale1 = 0.0001
+        scale2 = 0.01
         # A = [self.f(guess)*alpha/domainsize/np.exp(0.)*np.sqrt(2*np.pi)*scale]
         A = [self.f(guess)*alpha]
-        self.samples = np.random.normal(guess, scale, size=(sample_size,self.p))
+        self.samples1 = np.random.normal(guess, scale1, size=(sample_size/4,self.p))
+        self.samples2 = np.random.normal(guess, scale2, size=(sample_size/4,self.p))
+        self.samples3 = np.random.uniform(size=(sample_size/2,self.p))
         # self.samples = np.min(np.max((self.samples, self.bounds[:,0]),),self.bounds[i,1])
-        for x in self.samples:
+        for x in self.samples1:
             # A.append(self.f(x)*alpha/domainsize/np.exp(np.linalg.norm(x-guess)**2/(scale**2))*np.sqrt(2*np.pi)*scale)
-            A.append(self.f(x)*alpha-np.linalg.norm(x-guess)**2/2./(scale**2))
-        return logsumexp(A) + np.log(np.sqrt(2*np.pi)*scale) - np.log(sample_size)
+            A.append(self.f(x)*alpha+np.linalg.norm(x-guess)**2/2./(scale1**2))
+        for x in self.samples2:
+            A.append(self.f(x)*alpha+np.linalg.norm(x-guess)**2/2./(scale2**2)+np.log(scale2/scale1))
+        # return logsumexp(A) + np.log(np.sqrt(2*np.pi)*scale) - np.log(sample_size)
+        for x in self.samples3:
+            A.append(self.f(x)*alpha+np.log(domainsize/np.sqrt(2*np.pi)/scale1))
+        return logsumexp(A) + np.log(np.sqrt(2*np.pi)*scale1/2/sample_size)
+
 
     def metropolishastings(self, guess, sample_size, alpha):
         # Prepare storing MCMC chain as array of arrays.
