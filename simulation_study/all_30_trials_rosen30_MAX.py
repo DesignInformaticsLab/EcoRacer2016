@@ -30,7 +30,7 @@ print solution[0,0,1].shape
 
 num_trial = 1
 
-method = 'mcmc'
+method = 'importance'
 single = False
 sample_size = 10000
 
@@ -65,7 +65,7 @@ def max_likelihood_estimate(no, label):
 
         data = np.copy(trials)
         # Write the array to disk
-        path = os.path.expanduser('rosen30_ML_{:d}sample_mcmc/all'.format(sample_size)+label+'rosen30_{:d}init.txt'.format(guess))
+        path = os.path.expanduser('rosen30_ML_{:d}sample_mcmc_new/all'.format(sample_size)+label+'rosen30_{:d}init.txt'.format(guess))
         with file(path, 'w') as outfile:
             # I'm writing a header here just for the sake of readability
             # Any line starting with "#" will be ignored by numpy.loadtxt
