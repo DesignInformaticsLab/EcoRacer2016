@@ -187,7 +187,7 @@ class Kriging():
             log_prob = alpha*path - logsumexp(alpha*np.vstack((sampled_path.T, path)).T, axis=1) + np.log(sample_size)
             # log_prob = np.log(1./(1.+np.sum(np.exp(alpha*(sampled_path.T - path)), axis=0)))
             # sum_improv = np.sum(self.recent_path)
-        elif method=='mcmc':
+        elif method=='importance':
             zz = self.mcmc_f_path(alpha, sig_inv, sample_size)
             log_prob = alpha*path - zz
 
@@ -276,24 +276,19 @@ class Kriging():
         # use importance sampling with a normal distribution
         # use two scales of normal for local and global
 
-        scale1 = 0.0001
-        scale2 = 0.01
-        # A = [self.f(guess)*alpha/domainsize/np.exp(0.)*np.sqrt(2*np.pi)*scale]
-        A = [self.f(guess)*alpha]
-        self.samples1 = np.random.normal(guess, scale1, size=(sample_size/4,self.p))
-        self.samples2 = np.random.normal(guess, scale2, size=(sample_size/4,self.p))
+        scale = 1e-9
+        A = []
+        self.samples1 = np.random.normal(guess, scale, size=(sample_size/2,self.p))
         self.samples3 = np.random.uniform(size=(sample_size/2,self.p))
-        # self.samples = np.min(np.max((self.samples, self.bounds[:,0]),),self.bounds[i,1])
+        self.samples3 = self.samples3*(self.bounds[:, 1]-self.bounds[:, 0])+self.bounds[:, 0]
         for x in self.samples1:
-            # A.append(self.f(x)*alpha/domainsize/np.exp(np.linalg.norm(x-guess)**2/(scale**2))*np.sqrt(2*np.pi)*scale)
-            A.append(self.f(x)*alpha+np.linalg.norm(x-guess)**2/2./(scale1**2))
-        for x in self.samples2:
-            A.append(self.f(x)*alpha+np.linalg.norm(x-guess)**2/2./(scale2**2)+np.log(scale2/scale1))
-        # return logsumexp(A) + np.log(np.sqrt(2*np.pi)*scale) - np.log(sample_size)
+            # A.append(f(x)/(C+np.exp(-(x-guess)**2./2./(scale1**2.))/np.sqrt(2*np.pi)/scale1)/sample_size*2*C)
+            A.append(self.f(x)*alpha-np.log(1+domainsize*np.exp(-np.linalg.norm(x-guess)**2./2./(scale**2.))/np.sqrt(2.*np.pi)/(scale**self.p))
+                     -np.log(sample_size/2.))
         for x in self.samples3:
-            A.append(self.f(x)*alpha+np.log(domainsize/np.sqrt(2*np.pi)/scale1))
-        return logsumexp(A) + np.log(np.sqrt(2*np.pi)*scale1/2/sample_size)
-
+            A.append(self.f(x)*alpha-np.log(1+domainsize*np.exp(-np.linalg.norm(x-guess)**2./2./(scale**2.))/np.sqrt(2.*np.pi)/(scale**self.p))
+                     -np.log(sample_size/2.))
+        return logsumexp(A)
 
     def metropolishastings(self, guess, sample_size, alpha):
         # Prepare storing MCMC chain as array of arrays.

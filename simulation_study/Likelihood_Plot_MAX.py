@@ -147,80 +147,90 @@ def cuml_like(arr1, arr2):
         new[n] = arr1[:n+1].sum()+arr2[n+1:].sum()
     return new
 
-file_address = 'solution_obj_name_branin_maxiter_100_repeat_30.pkl'
+file_address = 'solution_obj_name_rosenbrock-30dim_maxiter_100_repeat_30.pkl'
 with open(file_address, 'r') as f:
     dat = pickle.load(f)
 
 names=['0.01','0.1','1.0','10.0']
-n_trial = 30
-no_iters = 20
-inits = np.arange(1,no_iters)
+
+#which samples to use for true data
+total_no_iters=20
+n_trial = 1
 
 def get_Ls(lam, iters):
     inits = np.arange(2,iters)
     Ls = np.zeros((inits.size,4))
     for n,i in enumerate(inits):
-        fname='./branin_ML/sample_study_MAX_trial30/all{}branin_{}iter_{:d}init.txt'.format(lam,iters,i)
+#         if i<15:
+#             fname='./rosen30_ML_10000sample/all{}rosen30_{}iter_{:d}init.txt'.format(lam,15,i)
+#         else:
+        fname='./rosen30_ML_10000sample_mcmc/all{}rosen30_{:d}init.txt'.format(lam,i)
         data = np.loadtxt(fname).reshape((n_trial,4,4))
         Ls[n] = -data.mean(axis=0).max(axis=1)
     return Ls
+# plt.plot(inits,lhs_like(inits,2,15))
+# plt.plot(inits,uni_like(inits,2,15))
+# print get_L(10.)
+pal = sns.color_palette('Dark2', n_colors=4, desat=.6)
+sns.set_palette(pal)
+# print get_Ls('0.01', no_iters).shape
 
-from tqdm import tnrange, tqdm_notebook
-file_address = 'solution_obj_name_branin_maxiter_100_repeat_30.pkl'
-with open(file_address, 'r') as f:
-    dat = pickle.load(f)
+# plt.plot(inits, get_Ls('0.01', no_iters))
+# plt.ylabel(r'$\min_{\Lambda,\alpha}(-\log {\cal L}(\alpha,\Lambda;\zeta,s_0))$')
+# plt.xlabel('No. initialization samples ')
+# plt.axvline(10, color='k',ls='--',label='True no. init')
+# plt.title(r'log-ikelihood of $(\Lambda,\alpha)$ on 20 samples'+'\n')
+# plt.legend([r'$\Lambda={}$'.format(nam) for nam in names], loc=0)
+# plt.tight_layout()
 
 names=['0.01','0.1','1.0','10.0']
 
 df = pd.DataFrame()
 
-
+dim = 30
+bounds = np.array([[-2, 2], [-2, 2], [-2, 2], [-2, 2], [-2, 2], [-2, 2],
+                    [-2, 2], [-2, 2], [-2, 2], [-2, 2], [-2, 2], [-2, 2],
+                    [-2, 2], [-2, 2], [-2, 2], [-2, 2], [-2, 2], [-2, 2],
+                    [-2, 2], [-2, 2], [-2, 2], [-2, 2], [-2, 2], [-2, 2],
+                    [-2, 2], [-2, 2], [-2, 2], [-2, 2], [-2, 2], [-2, 2]])  # for rosenbrock-30dim
 
 # f, axes = plt.subplots(nrows=2, ncols=2, figsize=(16,8))
 for lam_no in range(1):
     all_df = pd.DataFrame()
-    for no_iters in range(9,15):
+
+    p = np.zeros((total_no_iters-2,n_trial))+0.0 # initialize
+    solution_XX = np.dstack([i[lam_no][0][:total_no_iters,:].T for i in dat['solution']])
+    E_true = np.array([[pdist(solution_XX[:,:i,j].T).min() for i in range(2,total_no_iters)] for j in range(n_trial)])
+    alpha = 100.0
+    for it, trial in enumerate(range(n_trial)):
+        for n,tr in enumerate(range(2,total_no_iters)):
+            true_set = solution_XX[:, :tr, trial].T
+        #     samples = lhs(2, 100)
+            samples = np.random.uniform(size=(10000,dim))
+            samples = samples*(bounds[:, 1]-bounds[:, 0])+bounds[:, 0]
+            E_samp = (cdist(true_set[:-1],samples).min(axis=0))
+            log_prob = alpha*E_true[trial,n] - logsumexp(alpha*np.append(E_samp.T, E_true[trial,n]).T)
+            p[n,it] = -log_prob
+
+    for no_iters in range(9,total_no_iters+1):
         mins_df = pd.DataFrame(index=np.arange(n_trial),columns=names)
 #         no_iters = 20
         true_lam = lam_no
         l_ego = get_Ls(names[true_lam], no_iters)
-        # ax.set_title('$\Lambda^*={}$\n'.format(names[true_lam]))
+#         ax.set_title('$\Lambda^*={}$\n'.format(names[true_lam]))
 
         ## dat['solution'][true_lam, coor_or_ei, no_samples]
         solution_X = np.dstack([i[true_lam][0][:no_iters,:].T for i in dat['solution']])
         solution_y = np.dstack([i[true_lam][1][:no_iters] for i in dat['solution']])
 
-        E_true = np.array([[pdist(solution_X[:,:i,j].T).min() for i in range(2,40)] for j in range(n_trial)])
-
-        bounds = np.array([[-5, 10], [0, 15]])  # for branin
         t_samp = range(2,no_iters)
-        p = np.zeros_like(t_samp)+0.0 # initialize
-        alpha = 0.1
-        # for test in range(10):
-        colors=['b','k','g','r']
+
         for j in range(1):  # the test-lambda
             mins = []  # for min-seeking statistics
             for trial in range(n_trial):
-                for n,tr in enumerate(t_samp):
-                    true_set = solution_X[:,:tr, 0].T
-                    bounds = np.array([[-5, 10], [0, 15]])  # for branin
-                #     samples = lhs(2, 100)
-                    samples = np.random.uniform(size=(100,2))
-                    samples = samples*(bounds[:, 1]-bounds[:, 0])+bounds[:, 0]
-                    E_samp = (cdist(true_set[:-1],samples).min(axis=0))
-                    log_prob = alpha*E_true[trial,n] - logsumexp(alpha*np.append(E_samp.T, E_true[trial,n]).T)
-                    p[n] = -log_prob
-
-        #         ax.plot(t_samp,p+l_ego, color='k', ls=':')  # for just L_ini
-
-                combined=cuml_like(p,l_ego[:,j]);
-        #         ax.plot(t_samp,combined, color='k', ls=':')  # for combined
-    #             ax.scatter(t_samp[np.argmin(combined, axis=0)], np.min(combined,axis=0), color=colors[j])
-        #         ax.axvline(x=t_samp[np.argmin(combined)], alpha=.2, color='r')
+                combined=cuml_like(p[:(no_iters-2),trial],l_ego[:,j])
                 mins+=[np.min(combined)]
-            #     plt.scatter(*samples.T)
-    #         sns.distplot(mins, kde=False, bins=t_samp, hist_kws={'align':'left'}, ax=ax)
-    #         print len(mins)
+
             mins_df[names[j]]=mins
         mins_df = pd.melt(mins_df, value_vars=names, var_name='lambda',value_name='min_L')
         mins_df['no_obsv']=no_iters
