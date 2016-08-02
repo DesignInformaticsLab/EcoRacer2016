@@ -276,7 +276,7 @@ class Kriging():
         # use importance sampling with a normal distribution
         # use two scales of normal for local and global
 
-        scale = 1e-9
+        scale = 1e-1
         A = []
         self.samples1 = np.random.normal(guess, scale, size=(sample_size/2,self.p))
         self.samples3 = np.random.uniform(size=(sample_size/2,self.p))
