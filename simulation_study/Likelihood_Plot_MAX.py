@@ -155,18 +155,15 @@ names=['0.01','0.1','1.0','10.0']
 
 #which samples to use for true data
 total_no_iters=20
-n_trial = 1
+n_trial = 30
 
 def get_Ls(lam, iters):
     inits = np.arange(2,iters)
-    Ls = np.zeros((inits.size,4))
+    Ls = np.zeros((inits.size,4,n_trial))
     for n,i in enumerate(inits):
-#         if i<15:
-#             fname='./rosen30_ML_10000sample/all{}rosen30_{}iter_{:d}init.txt'.format(lam,15,i)
-#         else:
-        fname='./rosen30_ML_10000sample_mcmc/all{}rosen30_{:d}init.txt'.format(lam,i)
-        data = np.loadtxt(fname).reshape((n_trial,4,4))
-        Ls[n] = -data.mean(axis=0).max(axis=1)
+        fname='./rosen30_ML_10000sample_mcmc_new/all{}rosen30_{:d}init_30trial.txt'.format(lam,i)
+        data = -np.loadtxt(fname).reshape((n_trial,4,4))
+        Ls[n] = data.min(axis=2).T
     return Ls
 # plt.plot(inits,lhs_like(inits,2,15))
 # plt.plot(inits,uni_like(inits,2,15))
@@ -183,7 +180,7 @@ sns.set_palette(pal)
 # plt.legend([r'$\Lambda={}$'.format(nam) for nam in names], loc=0)
 # plt.tight_layout()
 
-names=['0.01','0.1','1.0','10.0']
+names=['10.0']
 
 df = pd.DataFrame()
 
@@ -201,18 +198,17 @@ for lam_no in range(1):
     p = np.zeros((total_no_iters-2,n_trial))+0.0 # initialize
     solution_XX = np.dstack([i[lam_no][0][:total_no_iters,:].T for i in dat['solution']])
     E_true = np.array([[pdist(solution_XX[:,:i,j].T).min() for i in range(2,total_no_iters)] for j in range(n_trial)])
-    alpha = 100.0
+    alpha = 10.0
     for it, trial in enumerate(range(n_trial)):
         for n,tr in enumerate(range(2,total_no_iters)):
             true_set = solution_XX[:, :tr, trial].T
-        #     samples = lhs(2, 100)
             samples = np.random.uniform(size=(10000,dim))
             samples = samples*(bounds[:, 1]-bounds[:, 0])+bounds[:, 0]
             E_samp = (cdist(true_set[:-1],samples).min(axis=0))
-            log_prob = alpha*E_true[trial,n] - logsumexp(alpha*np.append(E_samp.T, E_true[trial,n]).T)
+            log_prob = alpha*E_true[trial,n] - logsumexp(alpha*E_samp - np.log(10000))
             p[n,it] = -log_prob
 
-    for no_iters in range(9,total_no_iters+1):
+    for no_iters in range(19,total_no_iters+1):
         mins_df = pd.DataFrame(index=np.arange(n_trial),columns=names)
 #         no_iters = 20
         true_lam = lam_no
@@ -225,10 +221,10 @@ for lam_no in range(1):
 
         t_samp = range(2,no_iters)
 
-        for j in range(1):  # the test-lambda
+        for j in range(4):  # the test-lambda
             mins = []  # for min-seeking statistics
             for trial in range(n_trial):
-                combined=cuml_like(p[:(no_iters-2),trial],l_ego[:,j])
+                combined=cuml_like(p[:(no_iters-2),trial],l_ego[:,j,trial])
                 mins+=[np.min(combined)]
 
             mins_df[names[j]]=mins
@@ -247,4 +243,3 @@ for lam_no in range(1):
 
 sns.factorplot(data=df, x='no_obsv', y='min_L', hue='lambda', row='true_lam',
                kind='point', aspect=3, sharey=False)
-# plt.tight_layout()

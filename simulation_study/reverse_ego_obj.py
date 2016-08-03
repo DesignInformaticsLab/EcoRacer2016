@@ -276,13 +276,29 @@ class Kriging():
         # use importance sampling with a normal distribution
         # use two scales of normal for local and global
 
+        # scale = 1e-2
+        # A = []
+        # self.samples1 = np.random.normal(guess, scale, size=(sample_size/2,self.p))
+        # self.samples3 = np.random.uniform(size=(sample_size/2,self.p))
+        # self.samples3 = self.samples3*(self.bounds[:, 1]-self.bounds[:, 0])+self.bounds[:, 0]
+        # D = []
+        # for x in self.samples3:
+        #     D.append(-np.linalg.norm(x-guess)**2./2./(scale**2.)-np.log(np.sqrt(2.*np.pi))-self.p*np.log(scale))
+        # D = np.log(sample_size/2.)-logsumexp(D)
+        # for x in self.samples1:
+        #     A.append(self.f(x)*alpha-np.log(1+np.exp(D-np.linalg.norm(x-guess)**2./2./(scale**2.))/np.sqrt(2.*np.pi)/(scale**self.p))
+        #              -np.log(sample_size/2.))
+        # for x in self.samples3:
+        #     A.append(self.f(x)*alpha-np.log(1+np.exp(D-np.linalg.norm(x-guess)**2./2./(scale**2.))/np.sqrt(2.*np.pi)/(scale**self.p))
+        #              -np.log(sample_size/2.))
+        # return logsumexp(A)
+
         scale = 1e-2
         A = []
         self.samples1 = np.random.normal(guess, scale, size=(sample_size/2,self.p))
         self.samples3 = np.random.uniform(size=(sample_size/2,self.p))
         self.samples3 = self.samples3*(self.bounds[:, 1]-self.bounds[:, 0])+self.bounds[:, 0]
         for x in self.samples1:
-            # A.append(f(x)/(C+np.exp(-(x-guess)**2./2./(scale1**2.))/np.sqrt(2*np.pi)/scale1)/sample_size*2*C)
             A.append(self.f(x)*alpha-np.log(1+domainsize*np.exp(-np.linalg.norm(x-guess)**2./2./(scale**2.))/np.sqrt(2.*np.pi)/(scale**self.p))
                      -np.log(sample_size/2.))
         for x in self.samples3:
