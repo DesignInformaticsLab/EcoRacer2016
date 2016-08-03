@@ -1,4 +1,4 @@
-##　This file tests individual ego likelihood
+# this file tests individual ego likelihood
 
 from ego_solver import EGO
 import numpy as np
@@ -20,7 +20,7 @@ solution = np.array(dat['solution'])
 num_trial = 1
 
 # np.random.seed(0)
-sample_size = 10000
+sample_size = 2
 sig_guess = 0.01
 alpha = 0.01
 
