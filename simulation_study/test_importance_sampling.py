@@ -1,4 +1,4 @@
-##　This file tests importance sampling
+# This file tests importance sampling
 
 __author__ = 'p2admin'
 import numpy as np
