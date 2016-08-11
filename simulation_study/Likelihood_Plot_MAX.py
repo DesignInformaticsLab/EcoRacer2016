@@ -142,9 +142,10 @@ def cuml_like(arr1, arr2):
     # arr2=MinMaxScaler().fit_transform(arr2.astype(float).reshape(-1,1))
     if arr1.size!=arr2.size:
         raise Exception('must be equal-sized arrays arr1 and arr2')
-    new = np.zeros_like(arr1)
+    new = np.zeros(arr1.size+1)
     for n in range(new.size):
-        new[n] = arr1[:n+1].sum()+arr2[n+1:].sum()
+        new[n] = arr1[:n].sum()+arr2[n:].sum()
+    new[arr1.size] = arr1.sum()
     return new
 
 file_address = 'solution_obj_name_rosenbrock-30dim_maxiter_100_repeat_30.pkl'
@@ -208,7 +209,7 @@ for lam_no in range(1):
             log_prob = alpha*E_true[trial,n] - logsumexp(alpha*E_samp - np.log(10000))
             p[n,it] = -log_prob
 
-    for no_iters in range(19,total_no_iters+1):
+    for no_iters in range(5,total_no_iters+1):
         mins_df = pd.DataFrame(index=np.arange(n_trial),columns=names)
 #         no_iters = 20
         true_lam = lam_no

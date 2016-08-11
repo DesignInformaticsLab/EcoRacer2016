@@ -293,15 +293,18 @@ class Kriging():
         #              -np.log(sample_size/2.))
         # return logsumexp(A)
 
-        scale = 1e-2
+        scale = 1e-1
         A = []
+        temp = []
         self.samples1 = np.random.normal(guess, scale, size=(sample_size/2,self.p))
         self.samples3 = np.random.uniform(size=(sample_size/2,self.p))
         self.samples3 = self.samples3*(self.bounds[:, 1]-self.bounds[:, 0])+self.bounds[:, 0]
         for x in self.samples1:
+            temp.append(self.f(x))
             A.append(self.f(x)*alpha-np.log(1+domainsize*np.exp(-np.linalg.norm(x-guess)**2./2./(scale**2.))/np.sqrt(2.*np.pi)/(scale**self.p))
                      -np.log(sample_size/2.))
         for x in self.samples3:
+            temp.append(self.f(x))
             A.append(self.f(x)*alpha-np.log(1+domainsize*np.exp(-np.linalg.norm(x-guess)**2./2./(scale**2.))/np.sqrt(2.*np.pi)/(scale**self.p))
                      -np.log(sample_size/2.))
         return logsumexp(A)
