@@ -26,7 +26,7 @@ class Kriging():
 
         self.bounds = bounds
         self.num_ini_guess = num_ini_guess
-        self.size = np.prod(self.bounds[:, 1]-self.bounds[:, 0]+0.0)# domain size
+        self.size = np.prod(self.bounds[:, 1]-self.bounds[:, 0])# domain size
         self.sample_size = sample_size
         # setup random samples to calculate mean of expected improvement
         # self.samples = lhs(2, 100)  # for 2-dim funcs

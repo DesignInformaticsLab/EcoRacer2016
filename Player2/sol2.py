@@ -32,7 +32,7 @@ X = scale.fit_transform(X)
 ########
 
 # # get sigma estimate that maximizes the sum of expected improvements
-bounds = np.array(31*[[-1., 1.]])
+bounds = np.array(31*[[0.01, 10.0]])
 
 initial_guess = np.array([
         0.01,
