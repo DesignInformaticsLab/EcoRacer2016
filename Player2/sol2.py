@@ -28,17 +28,53 @@ scale = MinMaxScaler((-1., 1.))
 X = scale.fit_transform(X)
 
 ########
-X, y = X[:12], y[:12]
+# X, y = X[:12], y[:12]
 ########
 
 # # get sigma estimate that maximizes the sum of expected improvements
 bounds = np.array(31*[[-1., 1.]])
 
-soln = CovarianceEstimate(X, y, bounds=bounds, alpha=31.6)
+initial_guess = np.array([
+        0.01,
+        0.01,
+        0.042309624581465505,
+        0.3596366606394387,
+        0.01,
+        2.7829884240773324,
+        0.15192136346511198,
+        0.01,
+        0.01,
+        0.01,
+        0.45266520067595917,
+        0.01,
+        0.01,
+        0.01,
+        0.12430166802060787,
+        0.01,
+        1.1314614190397028,
+        0.48300704908795566,
+        0.01,
+        0.1197386464706936,
+        0.01,
+        0.01,
+        1.4709645458255112,
+        0.01,
+        0.2905627718390898,
+        0.04111797446313845,
+        3.2457907227927465,
+        0.01,
+        0.01,
+        0.09020801560634745,
+        2.2948942550847264
+    ])
+sample_size = 10000
+num_ini_guess = 2
+soln = CovarianceEstimate(X, y, bounds=bounds, alpha=10.0, sample_size=sample_size,
+                          num_ini_guess=num_ini_guess, initial_guess=initial_guess)
 # sig_test = np.zeros(31)
 # sig_test[-1] = 2.6
 # soln.model.f_path(sig_test)
-[obj_set, sigma_set] = soln.solve(plot=True)
+[obj_set, sigma_set] = soln.solve(plot=False)
 
 # # pick the best solution
 obj = obj_set.min(axis=0)
@@ -52,8 +88,8 @@ print obj, sigma
 # # store sigma for simulation
 # # TODO: need to specify file name based on settings, e.g., optimization algorithm and input data source (best player?)
 
-file_address = 'p2_bfgs_sigma_alpha'+str(soln.alpha)+'TRUNCATED.json'
-with open(file_address, 'w') as f:
+file_address = 'p2_bfgs_sigma_alpha'+str(soln.alpha)+'_0811.json'
+with open(file_address, 'wb') as f:
     # pickle.dump([obj_set, sigma_set], f)
     json.dump([obj, sigma.tolist()], f, sort_keys=True, indent=4, ensure_ascii=False)
 f.close()

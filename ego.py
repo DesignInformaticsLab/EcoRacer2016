@@ -12,7 +12,7 @@ class Kriging():
     This is the actual optimization class, that will interface with the higher level regression.
     """
     #def __init__(self, sig, X, y):
-    def __init__(self, sig_inv, bounds, num_ini_guess=2):
+    def __init__(self, sig_inv, bounds, num_ini_guess=2, sample_size=10000):
         #self.X = X
         #self.y = y
 
@@ -26,10 +26,12 @@ class Kriging():
 
         self.bounds = bounds
         self.num_ini_guess = num_ini_guess
+        self.size = np.prod(self.bounds[:, 1]-self.bounds[:, 0]+0.0)# domain size
+        self.sample_size = sample_size
         # setup random samples to calculate mean of expected improvement
         # self.samples = lhs(2, 100)  # for 2-dim funcs
-        self.samples = lhs(31, 500)  # for 6-dim rosenbrock
-        self.samples = self.samples*(self.bounds[:, 1]-self.bounds[:, 0])+self.bounds[:, 0]
+        # self.samples = lhs(31, 500)  # for 6-dim rosenbrock
+        # self.samples = self.samples*(self.bounds[:, 1]-self.bounds[:, 0])+self.bounds[:, 0]
 
 
     #def fit(self):
@@ -180,11 +182,14 @@ class Kriging():
 
     def obj(self, sig_inv, alpha):
         path = self.f_path(sig_inv)
-        sampled_path = self.sampled_f_path(sig_inv, self.samples)
-        # log_prob = np.log(1./(1.+np.sum(np.exp(alpha*(sampled_path.T - path)), axis=0)))
-        # sum_improv = np.sum(self.recent_path)
+        # sampled_path = self.sampled_f_path(sig_inv, self.samples)
+        # # log_prob = np.log(1./(1.+np.sum(np.exp(alpha*(sampled_path.T - path)), axis=0)))
+        # # sum_improv = np.sum(self.recent_path)
+        # log_prob = alpha*path - logsumexp(alpha*np.vstack((sampled_path.T, path)).T, axis=1)
 
-        log_prob = alpha*path - logsumexp(alpha*np.vstack((sampled_path.T, path)).T, axis=1)
+        zz = self.mcmc_f_path(alpha, sig_inv, self.sample_size)
+        log_prob = alpha*path - zz
+
         self.recent_path = log_prob
         sum_improv = np.sum(log_prob)
 
@@ -215,4 +220,44 @@ class Kriging():
         # #     self.fit(data_now[0],data_now[1])
         # #     F += self.f(x)
         # # return F
+    def mcmc_f_path(self, alpha, sig_inv, sample_size):
+        domainsize = self.size
+        self.SI = np.diag(sig_inv)
 
+        # save whole database as a copy
+        old_X = self.X[:]
+        old_y = self.y[:]
+        old_sig = self.SI[:]
+
+        sampled_path = np.zeros(self.X.shape[0]-self.num_ini_guess)
+        # print self.n, path.shape
+        self.fit(old_X[:self.num_ini_guess],old_y[:self.num_ini_guess])  # first observation
+        for i, x in enumerate(old_X[self.num_ini_guess:], self.num_ini_guess):
+            result = self.importancesampling(x,sample_size,alpha,domainsize)
+            sampled_path[i-self.num_ini_guess] = result
+            self.fit(old_X[:i+1], old_y[:i+1])
+
+        # return original database to storage
+        self.X = old_X
+        self.y = old_y
+        self.SI = old_sig
+        return sampled_path
+
+    def importancesampling(self, guess, sample_size, alpha, domainsize):
+        # use importance sampling with a normal distribution
+        # use two scales of normal for local and global
+        scale = 1e-1
+        A = []
+        temp = []
+        self.samples1 = np.random.normal(guess, scale, size=(sample_size/2,self.p))
+        self.samples3 = np.random.uniform(size=(sample_size/2,self.p))
+        self.samples3 = self.samples3*(self.bounds[:, 1]-self.bounds[:, 0])+self.bounds[:, 0]
+        for x in self.samples1:
+            temp.append(self.f(x))
+            A.append(self.f(x)*alpha-np.log(1+domainsize*np.exp(-np.linalg.norm(x-guess)**2./2./(scale**2.))/np.sqrt(2.*np.pi)/(scale**self.p))
+                     -np.log(sample_size/2.))
+        for x in self.samples3:
+            temp.append(self.f(x))
+            A.append(self.f(x)*alpha-np.log(1+domainsize*np.exp(-np.linalg.norm(x-guess)**2./2./(scale**2.))/np.sqrt(2.*np.pi)/(scale**self.p))
+                     -np.log(sample_size/2.))
+        return logsumexp(A)

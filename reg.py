@@ -27,15 +27,16 @@ class CovarianceEstimate:
         solve(self): actual solver, currently EGO, that finds Sigma[1:30]
             that maximize total expected improvement
     '''
-    def __init__(self, X, y, bounds, num_ini_guess=2, alpha=10.):
+    def __init__(self, X, y, bounds, initial_guess, sample_size=10000, num_ini_guess=2, alpha=10.):
         self.n = X.shape[1]
         self.sigma_inv = np.ones(self.n) # default value
-        self.model = Kriging(self.sigma_inv, bounds, num_ini_guess)  # Fit Kriging on the data.
+        self.model = Kriging(self.sigma_inv, bounds, num_ini_guess, sample_size)  # Fit Kriging on the data.
         self.model.fit(X, y)
         self.input = X
         self.rem_eng = y
         self.sct = None
         self.alpha = alpha
+        self.initial_guess = initial_guess
         # self.pbar = None
         # self.fig = None
         # self.ax = None
@@ -139,14 +140,16 @@ class CovarianceEstimate:
             #   0.          0.          0.          0.          0.          0.          0.
             #   0.          0.          0.          0.          0.          0.
             #   0.86766298  0.          0.        ] -6.752578221
-            x0 = np.ones(self.n)*s
+            # x0 = np.ones(self.n)*s
             # x0 = np.random.random(30)*5.
+            x0 = self.initial_guess
 
             func = lambda x: -self.model.obj(x, alpha=self.alpha)  # use this if switching from EGO, maximize the log likelihood
 
-            lb = 0.01
-            ub = 100.
-            bounds = [(lb, ub)]*self.n
+            # lb = 0.01
+            # ub = 100.
+            # bounds = [(lb, ub)]*self.n
+            bounds = self.model.bounds
             # print bounds
 
             # these are some alternative functions, which use 'callbackF for verbosity'
