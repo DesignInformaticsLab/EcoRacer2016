@@ -114,12 +114,13 @@ class Kriging():
 
         #self.Sigma = sig  # replace stored sigma with supplied
         self.SI = np.diag(sig_inv)
-        path = np.zeros(self.n)
+
+        path = np.zeros(self.X.shape[0]-self.num_ini_guess)
         # print self.n, path.shape
         self.fit(old_X[:self.num_ini_guess],old_y[:self.num_ini_guess])  # first observation
         for i, x in enumerate(old_X[self.num_ini_guess:], self.num_ini_guess):
 
-            path[i-1] = self.f(x)
+            path[i-self.num_ini_guess] = self.f(x)
             self.fit(old_X[:i+1], old_y[:i+1])
 
         # return original database to storage

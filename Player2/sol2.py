@@ -67,7 +67,7 @@ initial_guess = np.array([
         0.09020801560634745,
         2.2948942550847264
     ])
-sample_size = 10000
+sample_size = 1000
 num_ini_guess = 2
 soln = CovarianceEstimate(X, y, bounds=bounds, alpha=10.0, sample_size=sample_size,
                           num_ini_guess=num_ini_guess, initial_guess=initial_guess)
