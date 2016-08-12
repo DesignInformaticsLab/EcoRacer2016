@@ -27,16 +27,17 @@ class CovarianceEstimate:
         solve(self): actual solver, currently EGO, that finds Sigma[1:30]
             that maximize total expected improvement
     '''
-    def __init__(self, X, y, bounds, initial_guess, sample_size=10000, num_ini_guess=2, alpha=10.):
+    def __init__(self, X, y, bounds, xbounds, initial_guess, sample_size=10000, num_ini_guess=2, alpha=10.):
         self.n = X.shape[1]
         self.sigma_inv = np.ones(self.n) # default value
-        self.model = Kriging(self.sigma_inv, bounds, num_ini_guess, sample_size)  # Fit Kriging on the data.
+        self.model = Kriging(self.sigma_inv, xbounds, num_ini_guess, sample_size)  # Fit Kriging on the data.
         self.model.fit(X, y)
         self.input = X
         self.rem_eng = y
         self.sct = None
         self.alpha = alpha
         self.initial_guess = initial_guess
+        self.bounds = bounds
         # self.pbar = None
         # self.fig = None
         # self.ax = None
@@ -149,7 +150,7 @@ class CovarianceEstimate:
             # lb = 0.01
             # ub = 100.
             # bounds = [(lb, ub)]*self.n
-            bounds = self.model.bounds
+            bounds = self.bounds
             # print bounds
 
             # these are some alternative functions, which use 'callbackF for verbosity'

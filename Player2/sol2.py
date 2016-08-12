@@ -33,6 +33,7 @@ X = scale.fit_transform(X)
 
 # # get sigma estimate that maximizes the sum of expected improvements
 bounds = np.array(31*[[0.01, 10.0]])
+xbounds = np.array(31*[[-1., 1.]])
 
 initial_guess = np.array([
         0.01,
@@ -67,10 +68,15 @@ initial_guess = np.array([
         0.09020801560634745,
         2.2948942550847264
     ])
-sample_size = 1000
+sample_size = 100
 num_ini_guess = 2
-soln = CovarianceEstimate(X, y, bounds=bounds, alpha=10.0, sample_size=sample_size,
+alpha = 10.0
+soln = CovarianceEstimate(X, y, bounds=bounds, xbounds=xbounds, alpha=alpha, sample_size=sample_size,
                           num_ini_guess=num_ini_guess, initial_guess=initial_guess)
+x_temp =np.random.normal(initial_guess, scale=0.1, size=(1,31))
+# x_temp = np.ones((31,))*10.0
+f0 = soln.model.obj(x_temp, alpha=alpha)
+print f0
 # sig_test = np.zeros(31)
 # sig_test[-1] = 2.6
 # soln.model.f_path(sig_test)
