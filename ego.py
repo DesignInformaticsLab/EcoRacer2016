@@ -181,7 +181,8 @@ class Kriging():
         self.SI = old_sig
         return sampled_path
 
-    def obj(self, sig_inv, alpha):
+    def obj(self, log_sig_inv, alpha, l_INI):
+        sig_inv = 10**log_sig_inv
         path = self.f_path(sig_inv)
         # sampled_path = self.sampled_f_path(sig_inv, self.samples)
         # # log_prob = np.log(1./(1.+np.sum(np.exp(alpha*(sampled_path.T - path)), axis=0)))
@@ -191,8 +192,11 @@ class Kriging():
         zz = self.mcmc_f_path(alpha, sig_inv, self.sample_size)
         log_prob = alpha*path - zz
 
+        L = self.cuml_like(l_INI, log_prob) # combine L_INI and L_BO
+        # L = log_prob
+
         self.recent_path = log_prob
-        sum_improv = np.sum(log_prob)
+        sum_improv = np.sum(L)
 
         return sum_improv
 
@@ -262,3 +266,12 @@ class Kriging():
             A.append(self.f(x)*alpha-np.log(1+domainsize*np.exp(-np.linalg.norm(x-guess)**2./2./(scale**2.))/np.sqrt(2.*np.pi)/(scale**self.p))
                      -np.log(sample_size/2.))
         return logsumexp(A)
+
+    def cuml_like(self, arr1, arr2):
+        if arr1.size!=arr2.size:
+            raise Exception('must be equal-sized arrays arr1 and arr2')
+        new = np.zeros(arr1.size+1)
+        for n in range(new.size):
+            new[n] = arr1[:n].sum()+arr2[n:].sum()
+        new[arr1.size] = arr1.sum()
+        return np.max(new)

@@ -27,7 +27,7 @@ class CovarianceEstimate:
         solve(self): actual solver, currently EGO, that finds Sigma[1:30]
             that maximize total expected improvement
     '''
-    def __init__(self, X, y, bounds, xbounds, initial_guess, sample_size=10000, num_ini_guess=2, alpha=10.):
+    def __init__(self, X, y, bounds, xbounds, initial_guess, l_INI, sample_size=10000, num_ini_guess=2, alpha=10.):
         self.n = X.shape[1]
         self.sigma_inv = np.ones(self.n) # default value
         self.model = Kriging(self.sigma_inv, xbounds, num_ini_guess, sample_size)  # Fit Kriging on the data.
@@ -36,6 +36,7 @@ class CovarianceEstimate:
         self.rem_eng = y
         self.sct = None
         self.alpha = alpha
+        self.l_INI = l_INI
         self.initial_guess = initial_guess
         self.bounds = bounds
         # self.pbar = None
@@ -93,7 +94,7 @@ class CovarianceEstimate:
         :return: best sigma
         '''
 
-        test_scale = np.arange(.1,1,0.3)
+        test_scale = np.arange(-2.,1.,0.5)
         # test_scale = np.array([0.7])
         result_x = np.zeros((test_scale.shape[0], self.n))
         result_f = np.zeros(test_scale.shape)
@@ -145,7 +146,7 @@ class CovarianceEstimate:
             # x0 = np.random.random(30)*5.
             x0 = self.initial_guess
 
-            func = lambda x: -self.model.obj(x, alpha=self.alpha)  # use this if switching from EGO, maximize the log likelihood
+            func = lambda x: -self.model.obj(x, alpha=self.alpha, l_INI= self.l_INI)  # use this if switching from EGO, maximize the log likelihood
 
             # lb = 0.01
             # ub = 100.
@@ -157,7 +158,7 @@ class CovarianceEstimate:
             # print self.model.obj(x0)
             print 'Initializing at '+str(s)
             res = opt.minimize(func, x0=x0, bounds=bounds, method='L-BFGS-B',
-                               options={'eps': 1e-7, 'iprint': 2, 'disp': True, 'maxiter': 100},
+                               options={'eps': 1e-3, 'iprint': 2, 'disp': True, 'maxiter': 100},
                                callback=self.callbackF)
             # pbar.update(1)
             # res = opt.differential_evolution(func, bounds, disp=True, popsize=10)
@@ -172,7 +173,7 @@ class CovarianceEstimate:
             print res.x, res.fun
             # return bo.res['max']
             result_f[i] = res.fun
-            result_x[i] = res.x
+            result_x[i] = 10**(res.x)
             # self.pbar.close()
         return result_f, result_x
 
