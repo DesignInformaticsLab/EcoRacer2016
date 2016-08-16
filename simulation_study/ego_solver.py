@@ -24,6 +24,8 @@ class EGO():
         self.max_iter = max_iter # EGO max iter
         self.num_ini_guess = num_ini_guess # initial sample size
         self.initial_sample() # samples to start EGO
+        self.irl_list = None
+        self.concentrated_likelihood_history = []
 
     def solve(self):
         while not self.terminate():
@@ -112,6 +114,9 @@ class EGO():
         # WARNING: this is getting runtime warnings (invalid value encountered in multiply/sqrt)
         return np.sqrt(mse)*sig
 
+    def irl_strat(self, file):
+        self.irl_list = np.genfromtxt(file, delimiter=',')[:, 1]
+
     def concentrated_likelihood(self, proposed_SIs):
         ls = np.zeros(proposed_SIs.shape[0])  # the likelihood array
         # old_sig = self.SI.copy()
@@ -129,6 +134,8 @@ class EGO():
 
         # self.SI = np.diag(proposed_SIs[np.argmax(ls)])  # lambda with highest likelihood
         self.SI = np.diag(proposed_SIs[np.argmin(ls)])  # lambda with highest likelihood
+        print "Current CLO Lamda: ", self.SI[0, 0]
+        self.concentrated_likelihood_history += [self.SI[0, 0]] #  store most recent x, for Lam=xI
 
     def f(self, x): # Expected improvement function
         if x.size == self.X.shape[1]:
@@ -159,7 +166,9 @@ class EGO():
                                  int(self.p)*[0.1],
                                  int(self.p)*[1.0],
                                  int(self.p)*[10.0]])
-        self.concentrated_likelihood(test_lambdas)
+        self.concentrated_likelihood(test_lambdas)  # only for CL-opt eq 4 ego (jones '98)
+        # self.SI = np.diag(np.ones(self.bounds.shape[0])*self.irl_list[self.X.shape[0]-10])  # only for IRL ego
+
         self.fit()
         func = lambda x: - self.f(x)
         result_x = np.zeros((n, p))

@@ -56,30 +56,39 @@ objs = [obj4]
 # boundss = [bounds1, bounds2, bounds3]
 boundss = [bounds4]
 sig_scale = np.array([0.01, 0.1, 1.0, 10.])
+# sig_scale = np.array([10.])
 max_iter = 50
 
 num_ini_guess = 10
 repeat = 30
+# repeat = 2
+
+
 for n, k in enumerate(obj_names):
 
-    file_address = './OPT_solution_obj_name_' + obj_names[n] + '_maxiter_' + str(max_iter)\
+    file_address = './solution_obj_name_' + obj_names[n] + '_maxiter_' + str(max_iter)\
                    + '_repeat_' + str(repeat) + '.pkl'
 
 
     if not os.path.isfile(file_address):
         solution = np.empty((repeat, sig_scale.shape[0]), object)
+        strategy_log = []
         for i in np.arange(repeat):
             for j, sigma_inv in enumerate(sig_scale):
                 sig_inv = np.ones(boundss[n].shape[0])*sigma_inv
                 solver = EGO(sig_inv, objs[n], boundss[n], max_iter, num_ini_guess)
+                # solver.irl_strat("rosen30_IRL_strat.csv")  # only for IRL ego
                 solution_X, solution_y = solver.solve()
+                strategy_log += [solver.concentrated_likelihood_history]  # only for CLO ego
                 solution[i, j] = (solution_X, solution_y)
-
+        print strategy_log
         # save the solution
         with open(file_address, 'w') as f:
             pickle.dump({'solution': solution.tolist(), 'sig_scale': sig_scale.tolist(), 'obj_name': obj_names[n],
                          'max_iter': max_iter}, f)
         f.close()
+        np.savetxt('CLO_strategy_log.txt', np.array(strategy_log))
+
     else:
         with open(file_address, 'r') as f:
             data = pickle.load(f)
