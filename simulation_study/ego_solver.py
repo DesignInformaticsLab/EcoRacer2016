@@ -162,12 +162,13 @@ class EGO():
         self.opt_ini_guess = self.opt_ini_guess*(self.bounds[:, 1]-self.bounds[:, 0])+self.bounds[:, 0]
         p = self.opt_ini_guess.shape[1] # problem size
         n = self.opt_ini_guess.shape[0] # number of optimization runs
-        test_lambdas = np.array([int(self.p)*[0.01],
-                                 int(self.p)*[0.1],
-                                 int(self.p)*[1.0],
-                                 int(self.p)*[10.0]])
-        self.concentrated_likelihood(test_lambdas)  # only for CL-opt eq 4 ego (jones '98)
-        # self.SI = np.diag(np.ones(self.bounds.shape[0])*self.irl_list[self.X.shape[0]-10])  # only for IRL ego
+        # test_lambdas = np.array([int(self.p)*[0.01],
+        #                          int(self.p)*[0.1],
+        #                          int(self.p)*[1.0],
+        #                          int(self.p)*[10.0]])
+        # self.concentrated_likelihood(test_lambdas)  # only for CL-opt eq 4 ego (jones '98)
+        self.SI = np.diag(np.ones(self.bounds.shape[0])*
+                          self.irl_list[self.X.shape[0]-self.num_ini_guess])  # only for IRL ego
 
         self.fit()
         func = lambda x: - self.f(x)
