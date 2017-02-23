@@ -15,14 +15,14 @@ class Preprocess:
         if pca_model is not None:
             self.pca = joblib.load(pca_model)  # try 'eco_full_pca.pkl'
 
-        self.full_tab = pd.read_json("../data.json")
+        self.full_tab = pd.read_json("c:\users\p2admin\documents\max\projects\ecoracer2016/data.json")
         self.full_tab["rem_nrg"] = self.full_tab.apply(lambda x: self.remaining_energy(x.score), axis=1)
 
         if all_dat is not None:
             self.all_dat = joblib.load(all_dat)  # try 'all_games.pkl'
             drop = np.any(self.all_dat, axis=1)
             self.all_dat = self.all_dat[drop]
-            self.full_tab = pd.read_json("../data.json")[drop]
+            self.full_tab = pd.read_json("c:\users\p2admin\documents\max\projects\ecoracer2016/data.json")[drop]
             self.full_tab["rem_nrg"] = self.full_tab.apply(lambda x: self.remaining_energy(x.score), axis=1)
             self.proj = None
         # print os.system('pwd')

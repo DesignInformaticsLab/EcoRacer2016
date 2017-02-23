@@ -19,15 +19,18 @@ method_string = ['5_plays_from_5_player2_04042016_', # 5 plays, 5 sigma
                  '11_plays_from_11_player2_04042016_', # 11 plays, 11 sigma
                  'original_unit_sigma_from_11_player2_03252016_', # 11 plays, unit sigma
                  '31_plays_from_2_player2_04212016_', # 2 plays, 31 sigma
+                 # 'all_plays_from_all_player2_08172016_', # 2 plays, 31 sigma
                  'original_unit_sigma_from_2_player2_04212016_', # 2 plays, unit sigma
+                 'original_MLE_sigma_08172016_', # 2 plays, GP MLE sigma
+                 'all_plays_from_all_player2_08152016_', # 2 plays, player 3!
                 ]
 
 
-iter = 20
+iter = 20 # number of trials
 data = [[[] for i in range(iter)] for j in range(len(method_string))]
 max = [[[] for i in range(iter)] for j in range(len(method_string))]
 
-data_address = 'simulation_04042016'
+data_address = 'simulation_02222017'
 if os.path.isfile(data_address+'.npy'):
     max = np.load(data_address+'.npy')
 else:
@@ -43,7 +46,8 @@ else:
 
             plays = np.array(psdb)
             score = plays[:,1]
-            max_score = [np.max(score[0:ii]) for ii in range(1,score.size)]
+            # max_score = [np.max(score[0:ii]) for ii in range(1,score.size)]
+            max_score = [np.max(score[0:ii]) for ii in range(1,180)] # test the first 50 iter
             max[j][i] = max_score
     np.save(data_address, max)
 
@@ -61,12 +65,20 @@ score_11u = np.array([np.array(max[3][j]) for j in range(len(max[3]))])
 mean_11u = np.mean(score_11u, axis = 0)
 std_11u = np.std(score_11u, axis = 0)
 
-score_31p = np.array([np.array(max[4][j]) for j in range(len(max[2]))])
+score_31p = np.array([np.array(max[4][j]) for j in range(len(max[4]))])
 mean_31p = np.mean(score_31p, axis = 0)
 std_31p = np.std(score_31p, axis = 0)
-score_31u = np.array([np.array(max[5][j]) for j in range(len(max[3]))])
+score_31u = np.array([np.array(max[5][j]) for j in range(len(max[5]))])
 mean_31u = np.mean(score_31u, axis = 0)
 std_31u = np.std(score_31u, axis = 0)
+
+score_mle = np.array([np.array(max[6][j]) for j in range(len(max[6]))])
+mean_mle = np.mean(score_mle, axis = 0)
+std_mle = np.std(score_mle, axis = 0)
+
+score_p3 = np.array([np.array(max[7][j]) for j in range(len(max[7]))])
+mean_p3 = np.mean(score_p3, axis = 0)
+std_p3 = np.std(score_p3, axis = 0)
 
 plt.subplot(3,1,1)
 plt.errorbar(range(mean_5p.size), mean_5p, yerr=std_5p)
@@ -81,6 +93,8 @@ plt.title('11 plays as initial | sigma from 11 plays vs unit sigma')
 plt.subplot(3,1,3)
 plt.errorbar(range(mean_31p.size), mean_31p, yerr=std_31p)
 plt.errorbar(range(mean_31u.size), mean_31u, yerr=std_31u)
+plt.errorbar(range(mean_mle.size), mean_mle, yerr=std_mle)
+plt.errorbar(range(mean_p3.size), mean_p3, yerr=std_p3)
 plt.title('2 plays as initial | sigma from 31 plays vs unit sigma')
 
 plt.show()

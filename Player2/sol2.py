@@ -28,7 +28,7 @@ scale = MinMaxScaler((-1., 1.))
 X = scale.fit_transform(X)
 
 ########
-n_trajectory = 12
+n_trajectory = 31
 X, y = X[:n_trajectory], y[:n_trajectory] # only use the first few plays
 ########
 
@@ -36,7 +36,10 @@ X, y = X[:n_trajectory], y[:n_trajectory] # only use the first few plays
 bounds = np.array(31*[[-2., 1.]])
 xbounds = np.array(31*[[-1., 1.]])
 
+# initial_guess = np.array([0.0]*31)
+
 initial_guess = np.log10(np.array([
+        2.2948942550847264,
         0.01,
         0.01,
         0.042309624581465505,
@@ -66,8 +69,7 @@ initial_guess = np.log10(np.array([
         3.2457907227927465,
         0.01,
         0.01,
-        0.09020801560634745,
-        2.2948942550847264
+        0.09020801560634745
 
 
         # 0.01,
@@ -134,6 +136,39 @@ initial_guess = np.log10(np.array([
         # 0.01,
         # 0.7445227026771479,
         # 0.009999999999999995
+
+        # this is from p2_bfgs_sigma_MLE_31.json
+        # 0.01,
+        # 0.72368274254733056,
+        # 3.1259148454693704,
+        # 0.27991899822525201,
+        # 0.01,
+        # 0.01,
+        # 0.01,
+        # 0.01,
+        # 0.01,
+        # 0.01,
+        # 0.01,
+        # 0.01,
+        # 0.01,
+        # 0.01,
+        # 0.01,
+        # 1.0570312287860779,
+        # 0.01,
+        # 0.01,
+        # 0.01,
+        # 0.01,
+        # 0.16075275891036223,
+        # 0.01,
+        # 0.01,
+        # 0.01,
+        # 0.01,
+        # 0.01,
+        # 0.01,
+        # 0.01,
+        # 0.01,
+        # 0.01,
+        # 3.8464362011368398
     ]))
 
 # below are the pre-calculated log likelihood (not negative!) values for l_INI, with alpha_INI = 10, 1, 0.01
@@ -157,7 +192,7 @@ l_INI_001 = -np.array([ 0.0077654,   0.01148891,  0.0085491,   0.00846845,  0.00
 
 
 
-sample_size = 100
+sample_size = 1000
 num_ini_guess = 2
 alpha = 10.0
 soln = CovarianceEstimate(X, y, bounds=bounds, xbounds=xbounds, alpha=alpha, sample_size=sample_size,
@@ -166,53 +201,54 @@ soln = CovarianceEstimate(X, y, bounds=bounds, xbounds=xbounds, alpha=alpha, sam
 # # x_temp = np.ones((31,))*10.0
 f0 = soln.model.obj(initial_guess, alpha=alpha, l_INI=l_INI_10[:(n_trajectory-2)])
 print f0
-# sig_test = np.zeros(31)
-# sig_test[-1] = 2.6
-# soln.model.f_path(sig_test)
+# # sig_test = np.zeros(31)
+# # sig_test[-1] = 2.6
+# # soln.model.f_path(sig_test)
 [obj_set, sigma_set] = soln.solve(plot=False)
-
+#
 # # pick the best solution
 obj = obj_set.min(axis=0)
 sigma = sigma_set[obj_set.argmin(axis=0), :]
 print obj, sigma
-
-# # load bounds
-# from numpy import loadtxt
-# bounds = loadtxt("ego_bounds.txt", comments="#", delimiter=",", unpack=False)
 #
-# # store sigma for simulation
-# # TODO: need to specify file name based on settings, e.g., optimization algorithm and input data source (best player?)
-
-file_address = 'p2_bfgs_sigma_alpha'+str(soln.alpha)+'_0813_sample100_aroundx1_first12.json'
-# x0: thurston optimal for 31 plays
-# x1: thurston optimal for 12 plays
-# x2: thurston optimal for 5 plays
-
+# # # load bounds
+# # from numpy import loadtxt
+# # bounds = loadtxt("ego_bounds.txt", comments="#", delimiter=",", unpack=False)
+# #
+# # # store sigma for simulation
+# # # TODO: need to specify file name based on settings, e.g., optimization algorithm and input data source (best player?)
+#
+file_address = 'p2_bfgs_sigma_alpha'+str(soln.alpha)+'_0219_sample1000_aroundx0.json'
+# # x0: thurston optimal for 31 plays
+# # x1: thurston optimal for 12 plays
+# # x2: thurston optimal for 5 plays
+# # x4: for test only
+#
 with open(file_address, 'wb') as f:
     # pickle.dump([obj_set, sigma_set], f)
     json.dump([obj, sigma.tolist()], f, sort_keys=True, indent=4, ensure_ascii=False)
 f.close()
-
-# store all pcs to a json
-# from sklearn.externals import joblib
-# temp = joblib.load('../eco_full_pca.pkl')
 #
-# file_address = 'ica.json'
-# with open(file_address, 'w') as f:
-#     json.dump(temp.components_.tolist(), f, sort_keys=True, indent=4, ensure_ascii=False)
-# f.close()
-
-
-# with open('p2_range_transform.json', 'w') as outfile:
-#     json.dump({'range':scale.scale_.tolist(), 'min':scale.min_.tolist()},
-#               outfile, sort_keys=True, indent=4, ensure_ascii=False)
-# with open('p2_ICA_transform.json', 'w') as outfile:
-#     json.dump({'mix':pre.pca.mixing_.tolist(), 'unmix':pre.pca.components_.tolist(), 'mean':pre.pca.mean_.tolist()},
-#               outfile, sort_keys=True, indent=4, ensure_ascii=False)
-
-# np.savetxt('mix_scaled_p2_init_ALL5.txt', X)  # first two plays for later init.
-
-# A = pre.pca.components_
-# Std_inv = np.diag(1/scale.std_)
-# vis = A.T.dot(Std_inv.dot(np.diag(sigma).dot(Std_inv.dot(A))))
-# np.savetxt('visualize_this.txt', vis)
+# # store all pcs to a json
+# # from sklearn.externals import joblib
+# # temp = joblib.load('../eco_full_pca.pkl')
+# #
+# # file_address = 'ica.json'
+# # with open(file_address, 'w') as f:
+# #     json.dump(temp.components_.tolist(), f, sort_keys=True, indent=4, ensure_ascii=False)
+# # f.close()
+#
+#
+# # with open('p2_range_transform.json', 'w') as outfile:
+# #     json.dump({'range':scale.scale_.tolist(), 'min':scale.min_.tolist()},
+# #               outfile, sort_keys=True, indent=4, ensure_ascii=False)
+# # with open('p2_ICA_transform.json', 'w') as outfile:
+# #     json.dump({'mix':pre.pca.mixing_.tolist(), 'unmix':pre.pca.components_.tolist(), 'mean':pre.pca.mean_.tolist()},
+# #               outfile, sort_keys=True, indent=4, ensure_ascii=False)
+#
+# # np.savetxt('mix_scaled_p2_init_ALL5.txt', X)  # first two plays for later init.
+#
+# # A = pre.pca.components_
+# # Std_inv = np.diag(1/scale.std_)
+# # vis = A.T.dot(Std_inv.dot(np.diag(sigma).dot(Std_inv.dot(A))))
+# # np.savetxt('visualize_this.txt', vis)
