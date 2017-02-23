@@ -24,7 +24,7 @@ def cal_L_INI(alpha):
     # pre = Preprocess()
     # pre.get_json('../alluser_control.json')  # uncomment this to create the pkl file needed!!
     # pre.train_pca()
-    X, y = pre.ready_player_one(2) # MAX: first dimension is number of plays, second is solution space dimension
+    X, y = pre.ready_player_one(3) # MAX: first dimension is number of plays, second is solution space dimension
 
     # print len(X), "num iters"
     from sklearn.preprocessing import StandardScaler, MinMaxScaler
@@ -33,7 +33,7 @@ def cal_L_INI(alpha):
     scale = MinMaxScaler((-1., 1.))
     X = scale.fit_transform(X)
 
-    total_no_iters = 31
+    total_no_iters = 71
     n_trial = 1
     dim = 31
     bounds = np.array([[-1.,1.]]*dim)

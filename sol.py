@@ -16,7 +16,7 @@ pre = Preprocess(pca_model='../eco_full_pca.pkl', all_dat='../all_games.pkl')
 # pre = Preprocess()
 # pre.get_json('alluser_control.json')  # uncomment this to create the pkl file needed!!
 # pre.train_pca()
-X, y = pre.ready_player_one(2)
+X, y = pre.ready_player_one(3)
 
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 
@@ -57,10 +57,10 @@ with open(file_address, 'w') as f:
 f.close()
 
 
-with open('p2_range_transform.json', 'w') as outfile:
+with open('p3_range_transform.json', 'w') as outfile:
     json.dump({'range':scale.scale_.tolist(), 'min':scale.min_.tolist()},
               outfile, sort_keys = True, indent = 4, ensure_ascii=False)
-with open('p2_ICA_transform.json', 'w') as outfile:
+with open('p3_ICA_transform.json', 'w') as outfile:
     json.dump({'mix':pre.pca.mixing_.tolist(), 'unmix':pre.pca.components_.tolist(), 'mean':pre.pca.mean_.tolist()},
               outfile, sort_keys = True, indent = 4, ensure_ascii=False)
 # A = pre.pca.components_
